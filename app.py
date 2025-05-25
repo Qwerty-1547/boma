@@ -4,7 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import pymysql
 import os
 from dotenv import load_dotenv
-
+from functools import wraps
 
 load_dotenv()
 def get_db_connection():
@@ -32,7 +32,6 @@ def register():
         role = request.form['role']
 
         password_hash = generate_password_hash(password)
-
         
         cursor.execute('''INSERT INTO users (full_name, email, phone_number, password_hash, area_id, role_id)
                        VALUES (%s, %s,%s,%s,%s,%s)'''
@@ -49,7 +48,6 @@ def register():
     cursor.close()
     conn.close()
     return render_template('register.html', areas=areas, roles=roles)
-
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -73,7 +71,25 @@ def login():
         else:
             error = "invalid email address or password"
     return render_template('login.html', error=error)
-        
 
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            flash("You must be logged in to access this function")
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+        
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    return render_template('dashboard.html')
+
+@app.route('/logout', methods=['POST'])
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
+    
 if __name__ == '__main__':
     app.run(debug=True)
