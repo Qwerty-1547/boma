@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Available Houses</title>
+</head>
+<body>
+    <h1>Available Houses</h1>
+
+    {% for house in houses %}
+        <div style="margin-bottom: 20px;">
+            <h3>{{ house.title }}</h3>
+            <p><strong>Description:</strong> {{ house.description }}</p>
+            <p><strong>Rent:</strong> KES {{ house.rent }}</p>
+            <p><strong>Area:</strong> {{ house.area_name }}</p>
+            <p><strong>Posted by:</strong> {{ house.owner_name }}</p>
+        </div>
+    {% else %}
+        <p>No houses available.</p>
+    {% endfor %}
+</body>
+</html>

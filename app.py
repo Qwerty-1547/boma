@@ -5,6 +5,7 @@ import pymysql
 import os
 from dotenv import load_dotenv
 from functools import wraps
+from datetime import timedelta
 
 load_dotenv()
 def get_db_connection():
@@ -17,6 +18,7 @@ def get_db_connection():
 )
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY')
+app.permanent_session_lifetime = timedelta(minutes=5)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -39,11 +41,11 @@ def register():
         conn.commit()
         cursor.close()
         conn.close()
-        return redirect('/success')
+        return redirect('/dashboard')
     
     cursor.execute('SELECT id, name FROM areas')
     areas = cursor.fetchall()
-    cursor.execute('SELECT id, role_name FROM user_roles')
+    cursor.execute("SELECT * FROM user_roles WHERE role_name != 'Admin'")
     roles = cursor.fetchall()
     cursor.close()
     conn.close()
@@ -67,6 +69,7 @@ def login():
             session['user_id'] = user['id']
             session['user_name'] = user['full_name']
             session['role_id'] = user['role_id']
+            session.permanent = True
             return redirect('/dashboard')
         else:
             error = "invalid email address or password"
@@ -90,6 +93,66 @@ def dashboard():
 def logout():
     session.clear()
     return redirect(url_for('login'))
+
+@app.route('/houses')
+def list_houses():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute('''
+        SELECT houses.*, areas.name AS areas_name, users.full_name AS owner_name
+        FROM houses
+        JOIN areas ON houses.area_id = area_id
+        JOIN users ON houses.owner_id = owner_id
+        ORDER BY houses.created_at DESC
+''')
+    houses = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return render_template('houses.html', houses=houses)
+
+@app.route('/add_house', methods=['GET', 'POST'])
+@login_required
+def add_house():
+    if session.get('role_id') !=2:
+        flash("only owners can add houses.")
+        return redirect(url_for('dashboard'))
     
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT is_verified FROM users WHERE id = %s", (session['user_id'],))
+    user = cursor.fetchone()
+    if not user or not user['is_verified']:
+        flash("Your account is pending verification, contact admin")
+        cursor.close()
+        conn.close()
+        return redirect(url_for('dashboard'))
+    
+    if request.method == 'POST':
+        title = request.form['title']
+        description = request.form['description']
+        price = request.form['price']
+        address = request.form['address']
+        area_id = request.form['area_id']
+
+        cursor.execute('''INSERT INTO houses (owner_id, title, description, price, address, area_id)
+                       VALUES (%s, %s, %s, %s,%s, %s)''', 
+                       (session['user_id'], title, description, price, address, area_id))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        flash("House added successfully")
+        return redirect(url_for('list_houses'))
+    cursor.execute("SELECT id,name FROM areas")
+    areas = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    return render_template('add_house.html', areas=areas)
+
 if __name__ == '__main__':
     app.run(debug=True)
+    
+def make_Session_permanent ():
+    session.permanent= True
