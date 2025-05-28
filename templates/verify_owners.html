@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Verify Owners</title>
+</head>
+<body>
+    <h2>Pending Owner Approvals</h2>
+
+    {% if owners %}
+        <ul>
+            {% for owner in owners %}
+                <li>
+                    {{ owner.full_name }} - {{ owner.email }} - {{ owner.phone }}
+                    <form action="{{ url_for('approve_owner', user_id=owner.id) }}" method="post" style="display:inline;">
+                        <button type="submit">Approve</button>
+                    </form>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No owners pending verification.</p>
+    {% endif %}
+</body>
+</html>

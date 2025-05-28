@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Available Houses</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 2rem;
+            background-color: #f7f7f7;
+        }
+        h2 {
+            text-align: center;
+        }
+        .house-card {
+            background: #fff;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        }
+        .house-card h3 {
+            margin: 0;
+            color: #28a745;
+        }
+        .house-card p {
+            margin: 0.5rem 0;
+        }
+        .view-link {
+            margin-top: 0.5rem;
+            display: inline-block;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .view-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h2>Available Houses</h2>
+
+    {% for house in houses %}
+    <div class="house-card">
+        <h3>{{ house.title }}</h3>
+        <p><strong>Owner:</strong> {{ house.owner_name }}</p>
+        <p>{{ house.description[:150] }}{% if house.description|length > 150 %}...{% endif %}</p>
+
+        {% if session.get('user_id') %}
+            <a href="{{ url_for('view_house', house_id=house.id) }}" class="view-link">View Details</a>
+        {% else %}
+            <a href="{{ url_for('login') }}" class="view-link">Login to see more</a>
+        {% endif %}
+    </div>
+    {% endfor %}
+
+</body>
+</html>

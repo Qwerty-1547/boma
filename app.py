@@ -151,6 +151,68 @@ def add_house():
 
     return render_template('add_house.html', areas=areas)
 
+@app.route('/admin/verify_owners')
+@login_required
+def verify_owners():
+    if session.get('role_id') != 3:
+        flash("Admins only")
+        return redirect(url_for('dashboard'))
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+SELECT users.id, users.full_name, users.email, users.phone_number, users.area_id, users.created_at
+                   FROM users
+                   WHERE role_id = 2 AND is_verified = 0
+                   ''')
+    unverified_owners = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return render_template('verify_owners.html', owners = unverified_owners)
+
+@app.route('/admin/approve_owner/<int:user_id>', methods = ['POST'])
+@login_required
+def approve_owner(user_id):
+    if session.get('role_id') != 3:
+        flash("Admins only")
+        return redirect(url_for('/dashboard'))
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT role_id, is_verified FROM users WHERE id = %s", (user_id,))
+    user = cursor.fetchone()
+
+    if not user:
+        flash("user not found")
+    elif user['role_id'] != 2:
+        flash("user not registered as an owner")
+    elif user['is_verified']:
+        flash("user is already verified")
+    else:
+        cursor.execute("UPDATE users SET is_verified = 1 WHERE id = %s", (user_id,))
+        conn.commit()
+        flash("User approved successfully  ")
+    cursor.close()
+    conn.close()
+    return redirect(url_for('verify_owners'))
+
+@app.route('/available_houses')
+def available_houses():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute('''SELECT houses.owner_id, users.full_name AS owner_name, houses.title, houses.description, houses.is_available
+                   FROM houses
+                   JOIN users ON houses.owner_id = users.id 
+                   WHERE houses.is_available = 1
+                   ORDER BY houses.created_at DESC
+                   ''')
+    houses= cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return render_template('available_houses.html', houses = houses)
+
 if __name__ == '__main__':
     app.run(debug=True)
     
