@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tenant Dashboard - Bookmarked Houses</title>
+    <script src = "{{ url_for('static', filename='toggle_bookmark.js') }}"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f9f9f9;
+            padding: 2rem;
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+
+        .house-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+        }
+
+        .house-card h3 {
+            margin: 0;
+            color: #28a745;
+        }
+
+        .house-card p {
+            margin: 0.5rem 0;
+            color: #555;
+        }
+
+        .remove-button {
+            background: #dc3545;
+            color: white;
+            padding: 0.4rem 0.8rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .remove-button:hover {
+            background: #c82333;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1rem;
+            text-decoration: none;
+            color: #007bff;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <a class="back-link" href="{{ url_for('dashboard') }}">&larr; Back to Dashboard</a>
+
+    <h2>Your Bookmarked Houses</h2>
+
+    {% if bookmarked %}
+        {% for house in bookmarked %}
+            <div class="house-card">
+                <div class="house-details">
+                <h3>{{ house.title }}</h3>
+                <p><strong>Description:</strong> {{ house.description }}</p>
+                <p><strong>Area:</strong> {{ house.area_name }}</p>
+                <p><strong>Owner:</strong> {{ house.owner_name }}</p>
+                <p><strong>Price:</strong> {{ house.price }}</p>
+                </div>
+            <button class="bookmark-btn bookmarked" data-house-id="{{house.id}}" title="Remove bookmark">
+                <span id="bookmark-icon-{{ house.id }}">🔖</span>
+            </button>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p class="empty-message">You haven't bookmarked any houses yet.</p>
+    {% endif %}
+
+</body>
+</html>

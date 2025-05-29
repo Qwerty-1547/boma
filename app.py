@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, session, url_for, flash
+from flask import Flask, render_template, request, redirect, session, url_for, flash, jsonify
 import pymysql.cursors
 from werkzeug.security import generate_password_hash, check_password_hash
 import pymysql
@@ -70,17 +70,22 @@ def login():
             session['user_name'] = user['full_name']
             session['role_id'] = user['role_id']
             session.permanent = True
-            return redirect('/dashboard')
+            if session.get('role_id') == 1:
+                return redirect('/tenant_dashboard')
+            elif session.get('role_id') == 2:
+                return redirect('/add_house')
+            else:
+                flash("if not an admin F. OFF")
+            return redirect('/login')
         else:
             error = "invalid email address or password"
     return render_template('login.html', error=error)
 
-def login_required(f):
+def login_required(f):  
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
-            flash("You must be logged in to access this function")
-            return redirect(url_for('login'))
+            return redirect(url_for('login', next=request.url))
         return f(*args, **kwargs)
     return decorated_function
         
@@ -88,6 +93,27 @@ def login_required(f):
 @login_required
 def dashboard():
     return render_template('dashboard.html')
+
+@app.route('/tenant_dashboard')
+@login_required
+def tenant_dashboard():
+    if session.get('user_id') != 1:
+        flash("access denied, available only to logged in tenants")
+        return redirect(url_for('dashboard'))
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute('''SELECT houses.*, areas.name AS area_name, users.full_name AS owner_name
+                   FROM bookmarked_houses
+                   JOIN houses ON bookmarked_houses.id = houses.id
+                   JOIN areas ON houses.area_id = areas.id
+                   JOIN users ON houses.owner_id = users.id
+                   WHERE bookmarked_houses.user_id = %s''',
+                   (session.get('user_id'),))
+    bookmarked = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return render_template('tenant_dashboard.html', bookmarked=bookmarked)
 
 @app.route('/logout', methods=['POST'])
 def logout():
@@ -202,7 +228,7 @@ def available_houses():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute('''SELECT houses.owner_id, users.full_name AS owner_name, houses.title, houses.description, houses.is_available
+    cursor.execute('''SELECT houses.id, houses.owner_id, users.full_name AS owner_name, houses.title, houses.description, houses.is_available
                    FROM houses
                    JOIN users ON houses.owner_id = users.id 
                    WHERE houses.is_available = 1
@@ -213,8 +239,63 @@ def available_houses():
     conn.close()
     return render_template('available_houses.html', houses = houses)
 
+#old route handling bookmarking and unbookmarking
+'''
+@app.route('/bookmark/<int:house_id>', methods = ['POST'])
+@login_required
+def bookmark_house(house_id):
+    user_id = session.get('user_id')
+    if session.get('role_id') != 1:
+        flash("Only logged in tenants can bookmark houses")
+        return redirect(url_for('available_houses'))
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute(INSERT INTO bookmarked_houses(user_id, house_id) VALUES(%s,%s), (user_id, house_id))
+                       
+        conn.commit()
+        flash("House bookmarked")
+
+    except pymysql.IntegrityError:
+        flash("House already bookmarked")
+
+    cursor.close()
+    conn.close()
+    return redirect(url_for('available_houses'))'''
+
+@app.route('/toggle_bookmark', methods=['POST'])
+@login_required
+def toggle_bookmark():
+    data = request.get_json()
+    house_id = int(data.get('house_id'))
+
+    user_id = session['user_id']
+    #house_id = request.json.get('house_id')
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM bookmarked_houses WHERE user_id = %s AND house_id = %s", (user_id, house_id))
+    bookmark = cursor.fetchone()
+
+    if bookmark:
+        cursor.execute("DELETE FROM bookmarked_houses WHERE user_id = %s AND house_id = %s", (user_id, house_id))
+        conn.commit()
+        result = {"status": "removed"}
+    else:
+        cursor.execute("INSERT INTO bookmarked_houses (user_id, house_id) VALUES(%s, %s)",(user_id, house_id))
+        conn.commit()
+        result = {"status": "added"}
+
+    cursor.close()
+    conn.close()
+    return jsonify(result)
+    
+
+app.before_request 
+def make_Session_permanent():
+    session.permanent= True
+
 if __name__ == '__main__':
     app.run(debug=True)
-    
-def make_Session_permanent ():
-    session.permanent= True
