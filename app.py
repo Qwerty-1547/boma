@@ -6,6 +6,7 @@ import os
 from dotenv import load_dotenv
 from functools import wraps
 from datetime import timedelta
+import traceback
 
 load_dotenv()
 def get_db_connection():
@@ -73,9 +74,9 @@ def login():
             if session.get('role_id') == 1:
                 return redirect('/tenant_dashboard')
             elif session.get('role_id') == 2:
-                return redirect('/add_house')
+                return redirect('/owner_dashboard')
             else:
-                flash("if not an admin F. OFF")
+                flash("UNAUTHORIZED ACCESS")
             return redirect('/login')
         else:
             error = "invalid email address or password"
@@ -115,21 +116,41 @@ def tenant_dashboard():
     conn.close()
     return render_template('tenant_dashboard.html', bookmarked=bookmarked)
 
-@app.route('/logout', methods=['POST'])
+@app.route('/logout', methods=['POST','GET'])
 def logout():
     session.clear()
     return redirect(url_for('login'))
 
+#lists available houses for visitors with no accounts
+@app.route('/available_houses')
+def available_houses():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute('''SELECT houses.id, houses.owner_id, users.full_name AS owner_name, houses.title, houses.description, houses.is_available
+                   FROM houses
+                   JOIN users ON houses.owner_id = users.id 
+                   WHERE houses.is_available = 1
+                   ORDER BY houses.created_at DESC
+                   ''')
+    houses= cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return render_template('available_houses.html', houses = houses)
+
+
 @app.route('/houses')
+@login_required
 def list_houses():
     conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute('''
-        SELECT houses.*, areas.name AS areas_name, users.full_name AS owner_name
+        SELECT houses.*, areas.name AS area_name, users.full_name AS owner_name
         FROM houses
-        JOIN areas ON houses.area_id = area_id
-        JOIN users ON houses.owner_id = owner_id
+        JOIN areas ON houses.area_id = areas.id
+        JOIN users ON houses.owner_id = users.id
+        WHERE houses.is_available = 1
         ORDER BY houses.created_at DESC
 ''')
     houses = cursor.fetchall()
@@ -223,21 +244,6 @@ def approve_owner(user_id):
     conn.close()
     return redirect(url_for('verify_owners'))
 
-@app.route('/available_houses')
-def available_houses():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    cursor.execute('''SELECT houses.id, houses.owner_id, users.full_name AS owner_name, houses.title, houses.description, houses.is_available
-                   FROM houses
-                   JOIN users ON houses.owner_id = users.id 
-                   WHERE houses.is_available = 1
-                   ORDER BY houses.created_at DESC
-                   ''')
-    houses= cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return render_template('available_houses.html', houses = houses)
 
 #old route handling bookmarking and unbookmarking
 '''
@@ -291,7 +297,109 @@ def toggle_bookmark():
     cursor.close()
     conn.close()
     return jsonify(result)
+
+@app.route('/send_message', methods=['POST'])
+@login_required
+def send_message():
+    data = request.json
+    sender_id = session['user_id']
+    receiver_id = data.get('receiver_id')
+    house_id = data.get('house_id')  # Optional
+    message = data.get('message')
+
+    if not receiver_id or not message:
+        return jsonify({'status': 'error', 'message': 'Missing fields'}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute('''
+        INSERT INTO messages (sender_id, receiver_id, house_id, message)
+        VALUES (%s, %s, %s, %s)
+    ''', (sender_id, receiver_id, house_id, message))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return jsonify({'status': 'success'})
     
+@app.route('/inbox_data')
+@login_required
+def inbox_data():
+    try:
+        user_id = session['user_id']
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT m.id, m.message, m.house_id, m.sent_at, u.full_name AS sender_name
+            FROM messages m
+            JOIN users u ON m.sender_id = u.id
+            WHERE m.receiver_id = %s
+            ORDER BY m.sent_at DESC
+        """, (user_id,))
+        rows = cursor.fetchall()
+
+        messages = []
+        for row in rows:
+            messages.append({
+                'id': row['id'],
+                'house_id': row['house_id'],
+                'message': row['message'],
+                'sent_at': row['sent_at'],
+                'sender_name': row['sender_name']
+            })
+
+        cursor.close()
+        conn.close()
+
+        return render_template('partials/inbox_fragment.html', messages=messages)
+    except Exception as e:
+        print("Error in /get_inbox:", e)
+        traceback.print_exc()
+        return jsonify({'error': 'Server error'}), 500
+
+@app.route('/owner_dashboard')
+@login_required
+def owner_dashboard():
+    user_id = session['user_id']
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Check if the user is a verified owner
+    cursor.execute('''
+        SELECT is_verified FROM users
+        WHERE id = %s AND role_id = 2
+    ''', (user_id,))
+    result = cursor.fetchone()
+
+    if not result:
+        cursor.close()
+        conn.close()
+        flash("Access denied: Only verified owners can access this page.", "danger")
+        return redirect(url_for('dashboard'))  # or 'home'
+
+   # is_verified = result[0]
+    cursor.execute('SELECT full_name FROM users WHERE id = %s', (user_id,))
+    owner_value = cursor.fetchone()
+    owner_name = owner_value['full_name'] if owner_value else 'unknown'
+    # Fetch houses owned by the user
+    cursor.execute('''
+        SELECT houses.*, areas.name AS area_name
+        FROM houses
+        JOIN areas ON houses.area_id = areas.id
+        WHERE houses.owner_id = %s
+        ORDER BY houses.created_at DESC
+    ''', (user_id,))
+    houses = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template('owner_dashboard.html', houses=houses, owner_name=owner_name) #is_verified=is_verified)
+
 
 app.before_request 
 def make_Session_permanent():

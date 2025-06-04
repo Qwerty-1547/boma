@@ -1,22 +1,92 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Available Houses</title>
+    <script src="{{ url_for('static', filename='send_message.js') }}" defer></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(to right, #f0f4f8, #e2e8f0);
+            font-family: 'Arial', sans-serif;
+        }
+        .house-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            background: white;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            width: 100%; /* Make the card take full width of the grid cell */
+            max-width: 400px; /* Set a maximum width for the card */
+        }
+        .house-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+        .card-header {
+            background: linear-gradient(135deg, #4f46e5, #3b82f6);
+            color: white;
+            padding: 16px;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
+        .details {
+            height: 200px; /* Fixed height for box-like appearance */
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .textarea {
+            resize: none; /* Prevent resizing */
+        }
+        .button {
+            background: linear-gradient(135deg, #3b82f6, #4f46e5);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .button:hover {
+            background: linear-gradient(135deg, #4f46e5, #3b82f6);
+        }
+    </style>
 </head>
 <body>
-    <h1>Available Houses</h1>
+    <div class="max-w-6xl mx-auto p-6">
+        <h1 class="text-4xl font-bold mb-8 text-center text-gray-800">Available Houses</h1>
 
-    {% for house in houses %}
-        <div style="margin-bottom: 20px;">
-            <h3>{{ house.title }}</h3>
-            <p><strong>Description:</strong> {{ house.description }}</p>
-            <p><strong>Rent:</strong> KES {{ house.rent }}</p>
-            <p><strong>Area:</strong> {{ house.area_name }}</p>
-            <p><strong>Posted by:</strong> {{ house.owner_name }}</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {% for house in houses %}
+            <div class="house-card flex flex-col">
+                <div class="card-header">
+                    <h3 class="text-xl font-semibold">{{ house.title }}</h3>
+                </div>
+                <div class="details">
+                    <p class="text-gray-700"><strong>Description:</strong> {{ house.description }}</p>
+                    <p class="text-gray-700"><strong>Rent:</strong> KES {{ house.rent }}</p>
+                    <p class="text-gray-700"><strong>Area:</strong> {{ house.area_name }}</p>
+                    <p class="text-gray-700"><strong>Posted by:</strong> {{ house.owner_name }}</p>
+                </div>
+                <div class="mt-4 border-t pt-4">
+                    <h4 class="text-lg font-medium mb-2 text-gray-800">Contact Owner</h4>
+                    <form class="message-form space-y-2">
+                        <input type="hidden" name="receiver_id" value="{{ house.owner_id }}">
+                        <input type="hidden" name="house_id" value="{{ house.id }}">
+                        <textarea name="message" rows="4" required class="textarea w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-300 placeholder-gray-400" placeholder="Type your message here..."></textarea>
+                        <button type="submit" class="button">Send Message</button>
+                        <div class="message-status text-green-600 text-sm mt-1"></div>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <p class="text-center text-gray-600 col-span-full">No houses available.</p>
+            {% endfor %}
         </div>
-    {% else %}
-        <p>No houses available.</p>
-    {% endfor %}
+    </div>
 </body>
 </html>

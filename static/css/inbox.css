@@ -1,0 +1,36 @@
+.inbox-panel {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 350px;
+    height: 100%;
+    background: white;
+    box-shadow: -2px 0 15px rgba(0, 0, 0, 0.3); /* Increased shadow for a floating effect */
+    border-radius: 10px 0 0 10px; /* Rounded corners on the left side */
+    padding: 1.5rem; /* Increased padding for better spacing */
+    transition: right 0.3s ease;
+    z-index: 9999;
+    overflow-y: auto; /* Allow scrolling if content overflows */
+    backdrop-filter: blur(10px); /* Optional: adds a blur effect to the background */
+}
+
+.inbox-panel.open {
+    right: 0;
+}
+
+/* Optional: Add a close button style */
+.inbox-panel .close-button {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    color: #333;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.inbox-panel .close-button:hover {
+    color: #ff4d4d; /* Change color on hover for feedback */
+}

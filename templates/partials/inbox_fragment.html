@@ -1,0 +1,14 @@
+{% if messages %}
+<ul class="inbox-list">
+    {% for message in messages %}
+    <li class="message-item">
+        <strong>From:</strong> {{ message.sender_name }}<br>
+        <strong>House:</strong> {{ message.house_id }}<br>
+        <p>{{ message.message }}</p>
+        <small>Sent at: {{ message.sent_at }}</small>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>You have no messages.</p>
+{% endif %}

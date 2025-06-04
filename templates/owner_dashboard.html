@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Owner Dashboard</title>
+    <!--<link rel="stylesheet" href="{{ url_for('static', filename='css/inbox.css') }}">-->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/owner_dashboard.css') }}">
+    <script src="{{ url_for('static', filename='js/inbox.js') }}" defer></script>
+</head>
+<body>
+
+<header>
+    <h1>Welcome, {{ owner_name }}</h1>
+    <nav class="nav-links">
+        <a href="{{ url_for('add_house') }}">Add New House      </a>
+        <!-- <a href="{{ url_for('owner_dashboard') }}">My Houses</a>-->
+        <button id="open-inbox" class="inbox-btn">📨 Inbox</button>
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </nav>
+</header>
+
+<div class="container">
+    <h2 class="section-title">Your Recent Listings</h2>
+
+    {% if houses %}
+    <div class="house-list">
+        {% for house in houses %}
+        <div class="house-card">
+            <h3>{{ house.title }}</h3>
+            <p><strong>Area:</strong> {{ house.area_name }}</p>
+            <p><strong>Price:</strong> {{ house.price }}</p>
+            <p><strong>Status:</strong> {% if house.is_available %}Available{% else %}Unavailable{% endif %}</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+        <p>You haven't listed any houses yet.</p>
+    {% endif %}
+
+<div id="inboxPanel" class="inbox-panel">
+    <button id="closeInboxBtn" class="close-button">×</button>
+    <h2 class="text-lg font-bold">Inbox</h2>
+    <div id="inboxContent">Loading messages...
+        <!-- Messages will be dynamically inserted here -->
+    </div>
+    </div>
+
+</body>
+</html>
