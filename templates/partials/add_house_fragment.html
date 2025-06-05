@@ -1,0 +1,22 @@
+<div class="partial-add-house-container">
+  <h2 class="section-title">Add New House</h2>
+  <form action="{{ url_for('add_house_post') }}" method="POST">
+    <label>Title:</label><br />
+    <input type="text" name="title" required /><br />
+
+    <label>Description:</label><br />
+    <textarea name="description" required></textarea><br />
+
+    <label>Rent (KES):</label><br />
+    <input type="number" name="price" required /><br />
+
+    <label>Area:</label><br />
+    <select name="area_id">
+        {% for area in areas %}
+        <option value="{{ area.id }}">{{ area.name }}</option>
+        {% endfor %}
+    </select><br />
+
+    <button type="submit">Submit</button>
+  </form>
+</div>

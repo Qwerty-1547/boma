@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from functools import wraps
 from datetime import timedelta
 import traceback
+from jinja2 import TemplateNotFound
 
 load_dotenv()
 def get_db_connection():
@@ -89,7 +90,17 @@ def login_required(f):
             return redirect(url_for('login', next=request.url))
         return f(*args, **kwargs)
     return decorated_function
-        
+
+#rendering the various sections
+@app.route('/section/<section_name>')
+@login_required
+def section(section_name):
+    try:
+        return render_template(f'partials/{section_name}.html')
+    except TemplateNotFound:
+        return "Section not found", 404
+
+
 @app.route('/dashboard')
 @login_required
 def dashboard():
@@ -104,6 +115,10 @@ def tenant_dashboard():
     conn = get_db_connection()
     cursor = conn.cursor()
 
+    cursor.execute("SELECT users.full_name AS user_name FROM users WHERE users.id = %s", (session.get('user_id'),))
+    user_row = cursor.fetchone()
+    user_name = user_row['user_name'] if user_row else User
+
     cursor.execute('''SELECT houses.*, areas.name AS area_name, users.full_name AS owner_name
                    FROM bookmarked_houses
                    JOIN houses ON bookmarked_houses.id = houses.id
@@ -114,7 +129,7 @@ def tenant_dashboard():
     bookmarked = cursor.fetchall()
     cursor.close()
     conn.close()
-    return render_template('tenant_dashboard.html', bookmarked=bookmarked)
+    return render_template('tenant_dashboard.html', bookmarked=bookmarked, user_name=user_name)
 
 @app.route('/logout', methods=['POST','GET'])
 def logout():
@@ -122,7 +137,7 @@ def logout():
     return redirect(url_for('login'))
 
 #lists available houses for visitors with no accounts
-@app.route('/available_houses')
+@app.route('/partials/available_houses')
 def available_houses():
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -158,7 +173,7 @@ def list_houses():
     conn.close()
     return render_template('houses.html', houses=houses)
 
-@app.route('/add_house', methods=['GET', 'POST'])
+@app.route('/partials/add_house', methods=['GET'])
 @login_required
 def add_house():
     if session.get('role_id') !=2:
@@ -174,29 +189,46 @@ def add_house():
         flash("Your account is pending verification, contact admin")
         cursor.close()
         conn.close()
-        return redirect(url_for('dashboard'))
-    
-    if request.method == 'POST':
-        title = request.form['title']
-        description = request.form['description']
-        price = request.form['price']
-        address = request.form['address']
-        area_id = request.form['area_id']
-
-        cursor.execute('''INSERT INTO houses (owner_id, title, description, price, address, area_id)
-                       VALUES (%s, %s, %s, %s,%s, %s)''', 
-                       (session['user_id'], title, description, price, address, area_id))
-        conn.commit()
-        cursor.close()
-        conn.close()
-        flash("House added successfully")
-        return redirect(url_for('list_houses'))
-    cursor.execute("SELECT id,name FROM areas")
+    cursor.execute("SELECT id, name FROM areas")
     areas = cursor.fetchall()
     cursor.close()
     conn.close()
+    return render_template('partials/add_house_fragment.html', areas=areas)
+    
+@app.route('/partials/add_house', methods=['POST'], endpoint='add_house_post')
+@login_required
+def add_house_post():
+    if session.get('role_id') != 2:
+        flash("Only owners can add houses.")
+        return redirect(url_for('dashboard'))
 
-    return render_template('add_house.html', areas=areas)
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT is_verified FROM users WHERE id = %s", (session['user_id'],))
+    user = cursor.fetchone()
+    if not user or not user['is_verified']:
+        flash("Your account is pending verification, contact admin")
+        cursor.close()
+        conn.close()
+        return redirect(url_for('dashboard'))
+
+    # Get form data
+    title = request.form['title']
+    description = request.form['description']
+    price = request.form['price']
+    address = request.form['address']
+    area_id = request.form['area_id']
+
+    cursor.execute('''INSERT INTO houses (owner_id, title, description, price, address, area_id)
+                      VALUES (%s, %s, %s, %s, %s, %s)''',
+                   (session['user_id'], title, description, price, address, area_id))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    flash("House added successfully")
+    return redirect(url_for('dashboard'))  # Or wherever you want to redirect after success
 
 @app.route('/admin/verify_owners')
 @login_required

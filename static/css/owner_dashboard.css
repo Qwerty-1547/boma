@@ -1,4 +1,4 @@
- 
+/*base page styling*/
         body {
             font-family: 'Segoe UI', sans-serif;
             margin: 0;
@@ -61,64 +61,85 @@
             color: #555;
         }
 
-        .inbox-btn {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .inbox-btn:hover {
-            background-color: #0056b3;
-        }
-
-.inbox-panel {
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: 350px;
-  height: 100%;
-  background: white;
-  box-shadow: -2px 0 15px rgba(0, 0, 0, 0.3);
-  border-radius: 10px 0 0 10px;
-  padding: 1.5rem;
-  z-index: 9999;
-  overflow-y: auto;
-
-  /* Here's the sliding part */
-  transform: translateX(100%);
-  transition: transform 0.4s ease;
+        /*add house fragment styling*/
+body {
+    background: linear-gradient(to right, #f0f4f8, #e2e8f0);
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
 }
 
-.inbox-panel.open {
-  transform: translateX(0);
+.partial-add-house-container {
+    max-width: 600px; /* Set a maximum width for the form */
+    margin: 2rem auto; /* Center the form on the page */
+    padding: 2rem;
+    background: white;
+    border-radius: 12px; /* Rounded corners */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    transition: transform 0.3s ease; /* Smooth scaling effect */
 }
 
-
-/* Optional: Add a close button style */
-.inbox-panel .close-button {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    background: transparent;
-    border: none;
-    font-size: 1.5rem;
-    color: #333;
-    cursor: pointer;
-    transition: color 0.3s ease;
+.partial-add-house-container:hover {
+    transform: scale(1.02); /* Slightly scale up on hover */
 }
 
-.inbox-panel .close-button:hover {
-    color: #ff4d4d; /* Change color on hover for feedback */
-}
-/*.inbox-panel {
-    display: none;
-    /* other styling... *
+.section-title {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    color: #4f46e5; /* Title color */
+    text-align: center; /* Center the title */
 }
 
-.inbox-panel.open {
-    display: block;
+label {
+    font-weight: bold;
+    margin-top: 1rem;
+    display: block; /* Make labels block elements */
+    color: #333; /* Darker text for labels */
 }
-*/
+
+input[type="text"],
+input[type="number"],
+textarea,
+select {
+    width: 100%; /* Full width for inputs */
+    padding: 0.75rem; /* Padding for inputs */
+    margin-top: 0.5rem; /* Space between label and input */
+    border: 1px solid #ccc; /* Light border */
+    border-radius: 8px; /* Rounded corners */
+    transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transition */
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+textarea:focus,
+select:focus {
+    border-color: #4f46e5; /* Change border color on focus */
+    box-shadow: 0 0 5px rgba(79, 70, 229, 0.5); /* Add shadow on focus */
+    outline: none; /* Remove default outline */
+}
+
+textarea {
+    resize: vertical; /* Allow vertical resizing only */
+    height: 100px; /* Set a default height for the textarea */
+}
+
+button[type="submit"] {
+    background: linear-gradient(135deg, #4f46e5, #3b82f6); /* Gradient background */
+    color: white; /* White text */
+    padding: 0.75rem 1.5rem; /* Padding for button */
+    border: none; /* Remove border */
+    border-radius: 8px; /* Rounded corners */
+    cursor: pointer; /* Pointer cursor on hover */
+    font-size: 1rem; /* Font size */
+    margin-top: 1.5rem; /* Space above the button */
+    transition: background 0.3s ease, transform 0.3s ease; /* Smooth transition */
+}
+
+button[type="submit"]:hover {
+    background: linear-gradient(135deg, #3b82f6, #4f46e5); /* Change gradient on hover */
+    transform: translateY(-2px); /* Slight lift effect on hover */
+}
+
+button[type="submit"]:active {
+    transform: translateY(0); /* Reset lift effect on click */
+}

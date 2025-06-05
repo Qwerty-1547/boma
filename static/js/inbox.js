@@ -27,5 +27,11 @@ document.addEventListener('DOMContentLoaded', () => {
         closeBtn.addEventListener('click', () => {
             panel.classList.remove('open');
         });
+        document.addEventListener('click', (event) =>{
+            const isClickInside= panel.contains(event.target) || openBtn.contains(event.target);
+            if(!isClickInside) {
+                panel.classList.remove('open')
+            }
+        })
     }
 });

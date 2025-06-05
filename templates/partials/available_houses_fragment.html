@@ -1,0 +1,42 @@
+<h1 class="text-3xl font-bold mb-6 text-center text-gray-800">Available Houses</h1>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+    {% for house in houses %}
+    <div class="house-card flex flex-col border border-gray-200 rounded-lg shadow-md p-4 bg-white">
+        <div class="mb-3">
+            <h3 class="text-xl font-semibold text-indigo-700">{{ house.title }}</h3>
+        </div>
+        <div class="details text-sm text-gray-700 space-y-1">
+            <p><strong>Description:</strong> {{ house.description }}</p>
+            <p><strong>Rent:</strong> KES {{ house.rent }}</p>
+            <p><strong>Area:</strong> {{ house.area_name }}</p>
+            <p><strong>Posted by:</strong> {{ house.owner_name }}</p>
+        </div>
+        <div class="mt-4 pt-4 border-t">
+            <h4 class="text-md font-medium text-gray-800 mb-1">Contact Owner</h4>
+            <form class="message-form space-y-2">
+                <input type="hidden" name="receiver_id" value="{{ house.owner_id }}">
+                <input type="hidden" name="house_id" value="{{ house.id }}">
+                <textarea
+                    name="message"
+                    rows="3"
+                    required
+                    class="textarea w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    placeholder="Type your message here..."
+                ></textarea>
+                <button
+                    type="submit"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-md text-sm"
+                >
+                    Send Message
+                </button>
+                <div class="message-status text-sm text-green-600 mt-1"></div>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <p class="text-center text-gray-600 col-span-full">No houses available.</p>
+    {% endfor %}
+</div>
+
+<script src="{{ url_for('static', filename='send_message.js') }}"></script>
