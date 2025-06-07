@@ -17,5 +17,5 @@ function loadSection(section){
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
-    loadSection('dashboard');
+    loadSection('houses');
 })

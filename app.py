@@ -1,6 +1,7 @@
-from flask import Flask, render_template, request, redirect, session, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, session, url_for, flash, jsonify, make_response
 import pymysql.cursors
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename 
 import pymysql
 import os
 from dotenv import load_dotenv
@@ -8,6 +9,21 @@ from functools import wraps
 from datetime import timedelta
 import traceback
 from jinja2 import TemplateNotFound
+
+app = Flask(__name__)
+app.secret_key = os.getenv('SECRET_KEY')
+app.permanent_session_lifetime = timedelta(minutes=5)
+
+UPLOAD_FOLDER = 'static/uploads'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+MAX_CONTENT_LENGTH = 5*1024*1024
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1) [1].lower() in ALLOWED_EXTENSIONS
+
 
 load_dotenv()
 def get_db_connection():
@@ -18,9 +34,7 @@ def get_db_connection():
     database=os.getenv("DB_NAME"),
     cursorclass=pymysql.cursors.DictCursor
 )
-app = Flask(__name__)
-app.secret_key = os.getenv('SECRET_KEY')
-app.permanent_session_lifetime = timedelta(minutes=5)
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -55,6 +69,18 @@ def register():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    #handling session caches on browsers
+    if 'user_id' in session:
+        role_id = session.get('role_id')
+        if role_id == 1:
+            return redirect('/tenant_dashboard')
+        elif role_id == 2:
+            return redirect('/owner_dashboard')
+        else:
+            session.clear()
+            flash("UNAUTHORIZED ACCESS")
+            return redirect('/login')
+        
     error = None
     if request.method == 'POST':
         email = request.form['email']
@@ -81,7 +107,14 @@ def login():
             return redirect('/login')
         else:
             error = "invalid email address or password"
-    return render_template('login.html', error=error)
+    
+    #add no-cache headers on the response
+    response = make_response(render_template('login.html', error=error))
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    response.headers['pragma'] = 'no-cache'
+    response.headers['expires'] = '0'
+
+    return response
 
 def login_required(f):  
     @wraps(f)
@@ -154,7 +187,7 @@ def available_houses():
     return render_template('available_houses.html', houses = houses)
 
 
-@app.route('/houses')
+@app.route('/partials/houses')
 @login_required
 def list_houses():
     conn = get_db_connection()
@@ -171,7 +204,7 @@ def list_houses():
     houses = cursor.fetchall()
     cursor.close()
     conn.close()
-    return render_template('houses.html', houses=houses)
+    return render_template('partials/houses_fragment.html', houses=houses)
 
 @app.route('/partials/add_house', methods=['GET'])
 @login_required
@@ -194,7 +227,23 @@ def add_house():
     cursor.close()
     conn.close()
     return render_template('partials/add_house_fragment.html', areas=areas)
-    
+
+# def upload_house_image(house_id):
+    if request.method == 'POST':
+        if 'image' not in request.files:
+            flash('NO image files includes')
+            return redirect(request.url)
+        file = request.files('image')
+        if file.filename == '':
+            flash('No file selected')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            filename = f"{house_id}_{filename}"
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            
+        
+
 @app.route('/partials/add_house', methods=['POST'], endpoint='add_house_post')
 @login_required
 def add_house_post():

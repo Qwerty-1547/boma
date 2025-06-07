@@ -2,13 +2,13 @@
 <ul class="inbox-list">
     {% for message in messages %}
     <li class="message-item">
-        <strong>From:</strong> {{ message.sender_name }}<br>
-        <strong>House:</strong> {{ message.house_id }}<br>
+        <p><strong>From:</strong> {{ message.sender_name }}</p>
+        <p><strong>House ID:</strong> {{ message.house_id }}</p>
         <p>{{ message.message }}</p>
-        <small>Sent at: {{ message.sent_at }}</small>
+        <small class="timestamp">Sent at: {{ message.sent_at }}</small>
     </li>
     {% endfor %}
 </ul>
 {% else %}
-<p>You have no messages.</p>
+<p class="empty-message">You have no messages.</p>
 {% endif %}

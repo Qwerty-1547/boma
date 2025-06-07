@@ -1,87 +1,47 @@
-body {
-      font-family: Arial, sans-serif;
-      background: #f9f9f9;
-      padding: 2rem;
-}
-
-h2 {
-    text-align: center;
-    color: #333;
-}
-
-.house-card {
-    background: white;
+/* === tenant-dashboard.css === */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #343a40;
     padding: 1rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    margin-bottom: 1.5rem;
-}
-
-.house-card h3 {
-    margin: 0;
-    color: #28a745;
-}
-
-.house-card p {
-    margin: 0.5rem 0;
-    color: #555;
-}
-
-.remove-button {
-    background: #dc3545;
     color: white;
-    padding: 0.4rem 0.8rem;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+    box-shadow: var(--shadow-sm);
 }
 
-.remove-button:hover {
-    background: #c82333;
+.logout {
+    color: #f8d7da;
 }
 
 .back-link {
     display: inline-block;
     margin-bottom: 1rem;
     text-decoration: none;
-    color: #007bff;
+    color: var(--color-primary);
 }
 
 .back-link:hover {
     text-decoration: underline;
 }
- /*--header styling*/
- .dashboard-header {
-    background-color: #343a40;
-    padding: 1rem;
-    color: white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
 
-.nav-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    max-width: 900px;
-    margin: 0 auto;
-}
+@media (max-width: 600px) {
+    .nav-bar, .nav-links {
+        flex-direction: column;
+        align-items: flex-start;
+    }
 
-.nav-bar a,
-.nav-bar button {
-    color: white;
-    text-decoration: none;
-    margin-right: 1rem;
-    font-weight: bold;
-    background: none;
-    border: none;
-    cursor: pointer;
-}
+    .house-list,
+    #dynamicContent {
+        grid-template-columns: 1fr;
+    }
 
-.nav-bar a:hover,
-.nav-bar button:hover {
-    text-decoration: underline;
-}
+    header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
 
-.logout {
-    color: #f8d7da;
+    .partial-add-house-container {
+        margin: 1rem;
+        padding: 1rem;
+    }
 }

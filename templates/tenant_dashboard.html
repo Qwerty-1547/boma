@@ -2,59 +2,40 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Tenant Dashboard </title>
-    <script src = "{{ url_for('static', filename='js/toggle_bookmark.js') }}"></script>
-    <link rel="stylesheet" href="{{ url_for('static', filename = 'css/inbox.css') }}">
-    <script src="{{ url_for('static', filename='js/inbox.js') }}">defer</script>
-    <link rel="stylesheet" href="{{ url_for('static', filename = 'css/tenant_dashboard.css') }}">
-    <script src="{{ url_for('static', filename = 'js/section_loader.js') }}"></script>
+    <title>Tenant Dashboard</title>
+    
+    <script src="{{ url_for('static', filename='js/toggle_bookmark.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/inbox.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/section_loader.js') }}" defer></script>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tenant_dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/inbox.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/houses.css') }}">
 </head>
+
 <body>
 
 <header class="dashboard-header">
     <h1>Welcome {{ user_name }}</h1>
     <nav class="nav-bar">
-        <button onclick="loadSection('available_houses')">View Houses</button>
-        <button id="open-inbox" class="inbox-btn">📨 Inbox</button>
-        <!--<a href="{{ url_for('tenant_dashboard') }}">Dashboard</a>-->
-        <a href="{{ url_for('logout') }}" class="logout">Logout</a>
+        <button class="btn btn-primary" onclick="loadSection('available_houses')">View Houses</button>
+        <button id="open-inbox" class="btn btn-primary">📨 Inbox</button>
+        <a href="{{ url_for('logout') }}" class="nav-link logout">Logout</a>
     </nav>
 </header>
 
 <div id="inboxPanel" class="inbox-panel">
-    <button id="closeInboxBtn" class="close-button">×</button>
+    <button id="closeInboxBtn" class="close-button" aria-label="Close inbox">×</button>
     <h2 class="text-lg font-bold">Inbox</h2>
-    <div id="inboxContent">Loading messages...
-        <!-- Messages will be dynamically inserted here -->
-    </div>
-    </div>
-    <!--<a class="back-link" href="{{ url_for('dashboard') }}">&larr; Back to Dashboard</a>-->
-    <!-- Button to open inbox -->
+    <div id="inboxContent">Loading messages...</div>
+</div>
 
-   <!-- <h2>Your Bookmarked Houses</h2>
+<main id="content-area">
+    <!-- Sections like bookmarked houses or available houses will load here -->
+</main>
 
-    {% if bookmarked %}
-        {% for house in bookmarked %}
-            <div class="house-card">
-                <div class="house-details">
-                <h3>{{ house.title }}</h3>
-                <p><strong>Description:</strong> {{ house.description }}</p>
-                <p><strong>Area:</strong> {{ house.area_name }}</p>
-                <p><strong>Owner:</strong> {{ house.owner_name }}</p>
-                <p><strong>Price:</strong> {{ house.price }}</p>
-                </div>
-            <button class="bookmark-btn bookmarked" data-house-id="{{house.id}}" title="Remove bookmark">
-                <span id="bookmark-icon-{{ house.id }}">🔖</span>
-            </button>
-            </div>
-        {% endfor %}
-    {% else %}
-        <p class="empty-message">You haven't bookmarked any houses yet.</p>
-    {% endif %}-->
-    <main id="content-area">
-
-    </main>
-
-    
 </body>
 </html>
