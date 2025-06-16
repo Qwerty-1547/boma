@@ -2,6 +2,10 @@ body {
     background: linear-gradient(to right, #f0f4f8, #e2e8f0);
     font-family: 'Arial', sans-serif;
 }
+.auto.grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
 .house-card {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     border-radius: 12px;

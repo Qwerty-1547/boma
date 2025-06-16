@@ -1,31 +1,52 @@
-<div class="max-w-6xl mx-auto p-6">
-        <h1 class="text-4xl font-bold mb-8 text-center text-gray-800">Available Houses</h1>
+{% block content %}
+<div class="container">
+    <h1 class="page-title">Available Houses</h1>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {% for house in houses %}
-            <div class="house-card flex flex-col">
-                <div class="card-header">
-                    <h3 class="text-xl font-semibold">{{ house.title }}</h3>
-                </div>
-                <div class="details">
-                    <p class="text-gray-700"><strong>Description:</strong> {{ house.description }}</p>
-                    <p class="text-gray-700"><strong>Rent:</strong> KES {{ house.rent }}</p>
-                    <p class="text-gray-700"><strong>Area:</strong> {{ house.area_name }}</p>
-                    <p class="text-gray-700"><strong>Posted by:</strong> {{ house.owner_name }}</p>
-                </div>
-                <div class="mt-4 border-t pt-4">
-                    <h4 class="text-lg font-medium mb-2 text-gray-800">Contact Owner</h4>
-                    <form class="message-form space-y-2">
-                        <input type="hidden" name="receiver_id" value="{{ house.owner_id }}">
-                        <input type="hidden" name="house_id" value="{{ house.id }}">
-                        <textarea name="message" rows="4" required class="textarea w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-300 placeholder-gray-400" placeholder="Type your message here..."></textarea>
-                        <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition">Send Message</button>
-                        <div class="message-status text-green-600 text-sm mt-1"></div>
-                    </form>
-                </div>
+    <div class="house-grid">
+        {% for house in houses %}
+        <div class="house-card">
+                        <h3>{{ house.title }}</h3>
+            <p><strong>Description:</strong> {{ house.description }}</p>
+            <p><strong>Price:</strong> KES {{ "{:,.0f}".format(house.price) }}</p>
+            <p><strong>Area:</strong> {{ house.area_name }}</p>
+            <p><strong>Posted by:</strong> {{ house.owner_name }}</p>
+            
+
+
+
+            
+            <!-- ✅ Image Section -->
+            <div class="house-image-wrapper" style="margin-bottom: 1rem;">
+                {% if house.image_filename %}
+                    <img src="{{ url_for('static', filename='uploads/' ~ house.image_filename) }}"
+                         alt="House Image"
+                         style="width: 100%; height: 200px; object-fit: cover; border-radius: var(--radius-md); box-shadow: var(--shadow-sm);">
+                {% else %}
+                    <img src="{{ url_for('static', filename='uploads/placeholder.jpeg') }}"
+                         alt="No Image"
+                         style="width: 100%; height: 200px; object-fit: cover; opacity: 0.6; border-radius: var(--radius-md);">
+                {% endif %}
             </div>
-            {% else %}
-            <p class="text-center text-gray-600 col-span-full">No houses available.</p>
-            {% endfor %}
+
+            <div class="action-section" style="margin-top: 1rem;">
+                <button class="btn btn-primary" data-house-id="{{ house.id }}" title="Bookmark">
+                    <span id="bookmark-icon-{{ house.id }}">🔖 Bookmark</span>
+                </button>
+
+                <h4 style="margin-top: 1rem;">Contact Owner</h4>
+                <form class="message-form" data-house-id="{{ house.id }}">
+                    <input type="hidden" name="receiver_id" value="{{ house.owner_id }}">
+                    <input type="hidden" name="house_id" value="{{ house.id }}">
+
+                    <textarea name="message" placeholder="Type your message..." required></textarea>
+                    <button type="submit" class="btn btn-submit">Send Message</button>
+                    <div class="message-status" style="margin-top: 0.5rem; color: green;"></div>
+                </form>
+            </div>
         </div>
+        {% else %}
+        <p class="text-center">No houses available.</p>
+        {% endfor %}
     </div>
+</div>
+{% endblock %}

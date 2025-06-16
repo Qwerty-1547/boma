@@ -1,6 +1,6 @@
 <div class="partial-add-house-container">
   <h2 class="section-title">Add New House</h2>
-  <form action="{{ url_for('add_house_post') }}" method="POST">
+  <form id="addHouseForm" action="{{ url_for('add_house_post') }}" method="POST" enctype="multipart/form-data">
     <label for="title">Title:</label>
     <input type="text" name="title" id="title" required />
 
@@ -10,13 +10,19 @@
     <label for="price">Rent (KES):</label>
     <input type="number" name="price" id="price" required />
 
+    <label for="address">Address</label>
+    <input type="text" name="address" id="address" required>
+
     <label for="area_id">Area:</label>
     <select name="area_id" id="area_id" required>
+      <option value="">-- Select Area --</option>
       {% for area in areas %}
-      <option value="{{ area.id }}">{{ area.name }}</option>
-      {% endfor %}
-    </select>
-
+       <option value="{{ area.id}}">{{ area.name }}</option>
+       {% endfor %}
+       </select>
+    
+    <label for="images">Upload at least 2 images:</label>
+    <input type="file" name="images" id="images" multiple accept=".jpg, .jpeg, .png, .gif" required></br>
     <button type="submit" class="btn btn-submit">Submit</button>
   </form>
 </div>

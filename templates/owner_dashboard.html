@@ -11,7 +11,18 @@
 
     <script src="{{ url_for('static', filename='js/inbox.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/section_loader.js') }}"></script>
+    <script src="{{ url_for( 'static', filename='js/main.js') }}"></script>
 </head>
+<script>
+    document.getElementById('addHouseForm').addEventListener('submit', function(event){
+        const imageInput = document.getElementById('images')
+        const files = imageInput.files;
+        if(files.length<2){
+            alert("Upload at least two images");
+            event.preventDefault();
+        }
+    });
+</script>
 <body>
 
 <header class="dashboard-header">
@@ -22,7 +33,6 @@
         <a href="{{ url_for('logout') }}" class="nav-link logout">Logout</a>
     </nav>
 </header>
-
 <div id="content-area">
     <div class="container">
         <h2 class="section-title">Your Recent Listings</h2>
@@ -31,11 +41,24 @@
         <div class="house-list">
             {% for house in houses %}
             <div class="house-card">
+                
                 <h3>{{ house.title }}</h3>
                 <p><strong>Area:</strong> {{ house.area_name }}</p>
                 <p><strong>Price:</strong> {{ house.price }}</p>
                 <p><strong>Status:</strong> {% if house.is_available %}Available{% else %}Unavailable{% endif %}</p>
+                            <div class="house-image-wrapper" style="margin-bottom: 1rem;">
+                {% if house.image_filename %}
+                    <img src="{{ url_for('static', filename='uploads/' ~ house.image_filename) }}"
+                         alt="House Image"
+                         style="width: 100%; height: 200px; object-fit: cover; border-radius: var(--radius-md); box-shadow: var(--shadow-sm);">
+                {% else %}
+                    <img src="{{ url_for('static', filename='uploads/placeholder.jpeg') }}"
+                         alt="No Image"
+                         style="width: 100%; height: 200px; object-fit: cover; opacity: 0.6; border-radius: var(--radius-md);">
+                {% endif %}
             </div>
+            </div>
+            
             {% endfor %}
         </div>
         {% else %}
@@ -51,6 +74,18 @@
         <!-- Messages will be dynamically inserted here -->
     </div>
 </div>
+<div id="messages">
+    {% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <div class="flash-messages">
+      {% for message in messages %}
+        <p>{{ message }}</p>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
 
+</div>
+<div id="toast-container"></div>
 </body>
 </html>

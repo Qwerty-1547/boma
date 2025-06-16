@@ -67,6 +67,10 @@ def register():
     conn.close()
     return render_template('register.html', areas=areas, roles=roles)
 
+@app.route('/')
+def home():
+    return redirect('/login')
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     #handling session caches on browsers
@@ -142,7 +146,7 @@ def dashboard():
 @app.route('/tenant_dashboard')
 @login_required
 def tenant_dashboard():
-    if session.get('user_id') != 1:
+    if session.get('role_id') != 1:
         flash("access denied, available only to logged in tenants")
         return redirect(url_for('dashboard'))
     conn = get_db_connection()
@@ -150,7 +154,7 @@ def tenant_dashboard():
 
     cursor.execute("SELECT users.full_name AS user_name FROM users WHERE users.id = %s", (session.get('user_id'),))
     user_row = cursor.fetchone()
-    user_name = user_row['user_name'] if user_row else User
+    user_name = user_row['user_name'] if user_row else "Guest"
 
     cursor.execute('''SELECT houses.*, areas.name AS area_name, users.full_name AS owner_name
                    FROM bookmarked_houses
@@ -164,13 +168,60 @@ def tenant_dashboard():
     conn.close()
     return render_template('tenant_dashboard.html', bookmarked=bookmarked, user_name=user_name)
 
+@app.route('/owner_dashboard')
+@login_required
+def owner_dashboard():
+    user_id = session['user_id']
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Check if the user is a verified owner
+    cursor.execute('''
+        SELECT is_verified FROM users
+        WHERE id = %s AND role_id = 2
+    ''', (user_id,))
+    result = cursor.fetchone()
+
+    if not result:
+        cursor.close()
+        conn.close()
+        flash("Access denied: Only verified owners can access this page.", "danger")
+        return redirect(url_for('dashboard'))  # or 'home'
+
+   # is_verified = result[0]
+    cursor.execute('SELECT full_name FROM users WHERE id = %s', (user_id,))
+    owner_value = cursor.fetchone()
+    owner_name = owner_value['full_name'] if owner_value else 'unknown'
+    # Fetch houses owned by the user
+    cursor.execute('''
+        SELECT houses.*, areas.name AS area_name,
+                   (
+                   SELECT image_url
+                   FROM house_images
+                   WHERE house_images.house_id = houses.id
+                   ORDER BY id ASC
+                   LIMIT 1)
+                   AS image_url
+        FROM houses
+        JOIN areas ON houses.area_id = areas.id
+        WHERE houses.owner_id = %s
+        ORDER BY houses.created_at DESC
+    ''', (user_id,))
+    houses = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template('owner_dashboard.html', houses=houses, owner_name=owner_name) #is_verified=is_verified)
+
 @app.route('/logout', methods=['POST','GET'])
 def logout():
     session.clear()
     return redirect(url_for('login'))
 
 #lists available houses for visitors with no accounts
-@app.route('/partials/available_houses')
+@app.route('/available_houses')
 def available_houses():
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -194,7 +245,14 @@ def list_houses():
     cursor = conn.cursor()
 
     cursor.execute('''
-        SELECT houses.*, areas.name AS area_name, users.full_name AS owner_name
+        SELECT houses.*, areas.name AS area_name, users.full_name AS owner_name,
+                   (
+                   SELECT image_url
+                   FROM house_images
+                   WHERE house_images.house_id = houses.id
+                   ORDER BY id ASC
+                   LIMIT 1)
+                   AS image_filename
         FROM houses
         JOIN areas ON houses.area_id = areas.id
         JOIN users ON houses.owner_id = users.id
@@ -222,62 +280,95 @@ def add_house():
         flash("Your account is pending verification, contact admin")
         cursor.close()
         conn.close()
+        return redirect(url_for('dashboard'))
     cursor.execute("SELECT id, name FROM areas")
     areas = cursor.fetchall()
     cursor.close()
     conn.close()
     return render_template('partials/add_house_fragment.html', areas=areas)
 
-# def upload_house_image(house_id):
-    if request.method == 'POST':
-        if 'image' not in request.files:
-            flash('NO image files includes')
-            return redirect(request.url)
-        file = request.files('image')
-        if file.filename == '':
-            flash('No file selected')
-            return redirect(request.url)
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            filename = f"{house_id}_{filename}"
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            
-        
-
+#uploading houses and images
 @app.route('/partials/add_house', methods=['POST'], endpoint='add_house_post')
 @login_required
 def add_house_post():
+    app.logger.info("house post submitted")
     if session.get('role_id') != 2:
-        flash("Only owners can add houses.")
-        return redirect(url_for('dashboard'))
+        return jsonify({'error':'Only verified owners can add houses'}), 403
 
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Login required'}), 401
+    
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT is_verified FROM users WHERE id = %s", (session['user_id'],))
-    user = cursor.fetchone()
-    if not user or not user['is_verified']:
-        flash("Your account is pending verification, contact admin")
+    try:
+        # Check if user is verified
+        cursor.execute("SELECT is_verified FROM users WHERE id = %s", (user_id, ))
+        user = cursor.fetchone()
+        if not user or not user['is_verified']:
+            return jsonify({'error': 'Your account is pending verification.'}), 403
+
+        # Get form data
+        title = request.form.get('title')
+        description = request.form.get('description')
+        price = request.form.get('price')
+        address = request.form.get('address')
+        area_id = request.form.get('area_id')
+
+        # Validate required fields
+        if not all([title, description, price, address, area_id]):
+            return jsonify({'error': 'All fields are required'}), 400
+
+        # Validate price
+        try:
+            price = float(price)
+            if price < 0:
+                return jsonify({'error': 'Price must be a postive number'}), 400
+        except ValueError:
+            return jsonify({'error': 'price must be a number'}), 400
+
+        # Handle image upload
+        uploaded_files = request.files.getlist('images')
+        valid_images = [f for f in uploaded_files if f and f.filename != '' and allowed_file(f.filename)]
+
+        if len(valid_images) < 2:
+            return jsonify({'error': 'You must upload at least 2 valid images'}), 400
+
+        # Ensure upload folder exists
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+        # Insert house record
+        cursor.execute('''INSERT INTO houses (owner_id, title, description, price, address, area_id)
+                          VALUES (%s, %s, %s, %s, %s, %s)''',
+                       (session['user_id'], title, description, price, address, area_id))
+        house_id = cursor.lastrowid
+
+        # Save images and insert into DB
+        for file in valid_images:
+            filename = secure_filename(file.filename)
+            filename = f"{house_id}_{filename}"
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
+            try:
+                file.save(file_path)
+            except Exception as e:
+                conn.rollback()
+                return jsonify({'error': 'Error saving image file'}), 500
+
+            cursor.execute('INSERT INTO house_images (house_id, image_url) VALUES (%s, %s)', (house_id, filename))
+
+        conn.commit()
+        return jsonify({'success': 'House added successfully'}), 200
+    except Exception as e:
+        conn.rollback()
+        app.logger.error(f"Error adding house: {e}\n{traceback.format_exc()}")
+        return jsonify({'error': 'Unexpected error occurred'}), 500
+
+    finally:
         cursor.close()
         conn.close()
-        return redirect(url_for('dashboard'))
 
-    # Get form data
-    title = request.form['title']
-    description = request.form['description']
-    price = request.form['price']
-    address = request.form['address']
-    area_id = request.form['area_id']
-
-    cursor.execute('''INSERT INTO houses (owner_id, title, description, price, address, area_id)
-                      VALUES (%s, %s, %s, %s, %s, %s)''',
-                   (session['user_id'], title, description, price, address, area_id))
-    conn.commit()
-    cursor.close()
-    conn.close()
-
-    flash("House added successfully")
-    return redirect(url_for('dashboard'))  # Or wherever you want to redirect after success
 
 @app.route('/admin/verify_owners')
 @login_required
@@ -441,45 +532,6 @@ def inbox_data():
         traceback.print_exc()
         return jsonify({'error': 'Server error'}), 500
 
-@app.route('/owner_dashboard')
-@login_required
-def owner_dashboard():
-    user_id = session['user_id']
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    # Check if the user is a verified owner
-    cursor.execute('''
-        SELECT is_verified FROM users
-        WHERE id = %s AND role_id = 2
-    ''', (user_id,))
-    result = cursor.fetchone()
-
-    if not result:
-        cursor.close()
-        conn.close()
-        flash("Access denied: Only verified owners can access this page.", "danger")
-        return redirect(url_for('dashboard'))  # or 'home'
-
-   # is_verified = result[0]
-    cursor.execute('SELECT full_name FROM users WHERE id = %s', (user_id,))
-    owner_value = cursor.fetchone()
-    owner_name = owner_value['full_name'] if owner_value else 'unknown'
-    # Fetch houses owned by the user
-    cursor.execute('''
-        SELECT houses.*, areas.name AS area_name
-        FROM houses
-        JOIN areas ON houses.area_id = areas.id
-        WHERE houses.owner_id = %s
-        ORDER BY houses.created_at DESC
-    ''', (user_id,))
-    houses = cursor.fetchall()
-
-    cursor.close()
-    conn.close()
-
-    return render_template('owner_dashboard.html', houses=houses, owner_name=owner_name) #is_verified=is_verified)
 
 
 app.before_request 
