@@ -25,7 +25,7 @@ function initAddHouseForm() {
 
         } catch (err) {
             console.error(err);
-            showToast('Something went wrong. Please try again.', 'error');
+            showToast('Something went wrong. Please try again shortly.', 'error');
         }
     });
 }
@@ -46,7 +46,7 @@ function showToast(message, type = 'success') {
         toast.classList.add('opacity-0');
         setTimeout(() => toast.remove(), 500);
     }, 3000);
+    toast.addEventListener('click', () => toast.remove());
 }
-toast.addEventListener('click', () => toast.remove());
 
 window.showToast = showToast;

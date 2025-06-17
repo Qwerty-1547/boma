@@ -6,13 +6,32 @@ import pymysql
 import os
 from dotenv import load_dotenv
 from functools import wraps
-from datetime import timedelta
+from datetime import timedelta, datetime
+from decimal import Decimal
 import traceback
 from jinja2 import TemplateNotFound
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY')
 app.permanent_session_lifetime = timedelta(minutes=5)
+
+import base64
+import json
+
+@app.template_filter('b64encode')
+def b64encode_filter(s):
+    def convert(obj):
+        if isinstance(obj, Decimal):
+            return float(obj)
+        elif isinstance(obj, datetime):
+            return obj.isoformat()
+        raise TypeError(f"Type {type(obj)} not serializable")
+    
+    print("[b64encode] used with:", s)
+    if isinstance(s, dict):
+        s = json.dumps(s, default=convert)
+    return base64.b64encode(s.encode('utf-8')).decode('utf-8')
+
 
 UPLOAD_FOLDER = 'static/uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
@@ -263,6 +282,47 @@ def list_houses():
     cursor.close()
     conn.close()
     return render_template('partials/houses_fragment.html', houses=houses)
+
+@app.route('/house/<int:house_id>/details')
+@login_required
+def house_details(house_id):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Get house details + owner info
+    cursor.execute('''
+        SELECT houses.*, 
+               areas.name AS area_name,
+               users.full_name AS owner_name,
+               users.phone AS owner_contact,
+               users.is_verified AS owner_verified
+        FROM houses
+        JOIN areas ON houses.area_id = areas.id
+        JOIN users ON houses.owner_id = users.id
+        WHERE houses.id = %s
+    ''', (house_id,))
+    house = cursor.fetchone()
+
+    if not house:
+        return jsonify({'error': 'House not found'}), 404
+
+    # Get all images for this house
+    cursor.execute('''
+        SELECT image_url 
+        FROM house_images
+        WHERE house_id = %s
+        ORDER BY id ASC
+    ''', (house_id,))
+    images = cursor.fetchall()
+    image_urls = [img['image_url'] for img in images]
+
+    cursor.close()
+    conn.close()
+
+    house['images'] = image_urls
+
+    return jsonify(house)
+
 
 @app.route('/partials/add_house', methods=['GET'])
 @login_required

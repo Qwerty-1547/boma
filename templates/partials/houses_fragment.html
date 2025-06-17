@@ -4,17 +4,15 @@
 
     <div class="house-grid">
         {% for house in houses %}
-        <div class="house-card">
-                        <h3>{{ house.title }}</h3>
+        <div class="house-card" 
+            data-house = "{{ house | tojson | b64encode }}" 
+            onclick="showHouseDetailFromBase64(this)">
+
+            <h3>{{ house.title }}</h3>
             <p><strong>Description:</strong> {{ house.description }}</p>
-            <p><strong>Price:</strong> KES {{ "{:,.0f}".format(house.price) }}</p>
+            <!--<p><strong>Price:</strong> KES {{ "{:,.0f}".format(house.price) }}</p>-->
             <p><strong>Area:</strong> {{ house.area_name }}</p>
-            <p><strong>Posted by:</strong> {{ house.owner_name }}</p>
-            
-
-
-
-            
+            <!--<p><strong>Posted by:</strong> {{ house.owner_name }}</p>-->
             <!-- ✅ Image Section -->
             <div class="house-image-wrapper" style="margin-bottom: 1rem;">
                 {% if house.image_filename %}
@@ -44,9 +42,27 @@
                 </form>
             </div>
         </div>
-        {% else %}
+        {% else %}  
         <p class="text-center">No houses available.</p>
         {% endfor %}
     </div>
 </div>
 {% endblock %}
+<!-- Sliding Detail Panel -->
+<div id="house-detail-panel" class="hidden">
+    <button id="close-panel" onclick="hideHouseDetail()">X</button>
+    <div class="panel-content">
+        <h2 id="detail-title"></h2>
+        <p><strong>Description:</strong> <span id="detail-desc"></span></p>
+        <p><strong>Price:</strong> KES <span id="detail-price"></span></p>
+        <p><strong>Area:</strong> <span id="detail-area"></span></p>
+        <p><strong>Owner:</strong> <span id="detail-owner"></span></p>
+        <p><strong>Contact:</strong> <span id="detail-contact"></span></p>
+        <p><strong>Verified:</strong> <span id="detail-verified"></span></p>
+        <div id="detail-images" class="image-gallery"></div>
+
+        <button class="btn" id="bookmark-btn">🔖 Bookmark</button>
+        <button class="btn" id="message-btn">✉ Send Message</button>
+    </div>
+</div>
+

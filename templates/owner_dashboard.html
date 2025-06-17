@@ -12,6 +12,7 @@
     <script src="{{ url_for('static', filename='js/inbox.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/section_loader.js') }}"></script>
     <script src="{{ url_for( 'static', filename='js/main.js') }}"></script>
+    <script src="{{url_for( 'static', filename='js/showHouseDetail.js') }}"></script>
 </head>
 <script>
     document.getElementById('addHouseForm').addEventListener('submit', function(event){
@@ -46,9 +47,10 @@
                 <p><strong>Area:</strong> {{ house.area_name }}</p>
                 <p><strong>Price:</strong> {{ house.price }}</p>
                 <p><strong>Status:</strong> {% if house.is_available %}Available{% else %}Unavailable{% endif %}</p>
-                            <div class="house-image-wrapper" style="margin-bottom: 1rem;">
-                {% if house.image_filename %}
-                    <img src="{{ url_for('static', filename='uploads/' ~ house.image_filename) }}"
+                <p><strong>Date Posted:</strong> {{ house.created_at.strftime('%b %d, %Y') }}</p>
+                <div class="house-image-wrapper" style="margin-bottom: 1rem;">
+                {% if house.image_url %}
+                    <img src="{{ url_for('static', filename='uploads/' ~ house.image_url) }}"
                          alt="House Image"
                          style="width: 100%; height: 200px; object-fit: cover; border-radius: var(--radius-md); box-shadow: var(--shadow-sm);">
                 {% else %}
