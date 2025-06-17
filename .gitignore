@@ -3,5 +3,6 @@ __pycache__/
 *.pyc
 venv/
 *.db
-static/uploads/
+static/uploads/*
+!static/uploads/.gitkeep
 .vscode/
