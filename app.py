@@ -27,7 +27,7 @@ def b64encode_filter(s):
             return obj.isoformat()
         raise TypeError(f"Type {type(obj)} not serializable")
     
-    print("[b64encode] used with:", s)
+    #print("[b64encode] used with:", s)
     if isinstance(s, dict):
         s = json.dumps(s, default=convert)
     return base64.b64encode(s.encode('utf-8')).decode('utf-8')
@@ -99,6 +99,8 @@ def login():
             return redirect('/tenant_dashboard')
         elif role_id == 2:
             return redirect('/owner_dashboard')
+        elif role_id == 3:
+            return redirect('/admin/verify_owners')
         else:
             session.clear()
             flash("UNAUTHORIZED ACCESS")
@@ -287,14 +289,14 @@ def list_houses():
 @login_required
 def house_details(house_id):
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor()
 
     # Get house details + owner info
     cursor.execute('''
         SELECT houses.*, 
                areas.name AS area_name,
                users.full_name AS owner_name,
-               users.phone AS owner_contact,
+               users.phone_number AS owner_contact,
                users.is_verified AS owner_verified
         FROM houses
         JOIN areas ON houses.area_id = areas.id

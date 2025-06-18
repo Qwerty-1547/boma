@@ -7,7 +7,14 @@
     <script src="{{ url_for('static', filename='js/toggle_bookmark.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/inbox.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/section_loader.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script src="{{ url_for('static', filename='js/showHouseDetail.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/send_message.js') }}">   </script>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        loadSection('houses');
+    });
+</script>
     <!---->
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
@@ -39,6 +46,6 @@
 <main id="content-area">
     <!-- Sections like bookmarked houses or available houses will load here -->
 </main>
-
+<div id="toast-container"></div>
 </body>
 </html>

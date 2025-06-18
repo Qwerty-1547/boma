@@ -11,7 +11,9 @@
 
       {% if session.get('user_id') == 1 %}
           <a href="{{ url_for('available_houses', house_id=house.id) }}" class="view-link btn btn-primary">View Details</a>
-
+          <button class="bookmark-btn bookmarked btn" data-house-id="{{ house.id }}" title="Remove bookmark">
+              <span id="bookmark-icon-{{ house.id }}">🔖</span>
+          </button>
       {% else %}
           <a href="{{ url_for('login') }}" class="view-link btn btn-primary">Login to see more</a>
       {% endif %}

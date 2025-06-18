@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const form = document.getElementById('message-form');
-    if (!form) return;
+    const messageForm = document.getElementById('panel-message-form');
+    if (!messageForm) return;
 
     form.addEventListener('submit', function (e) {
         e.preventDefault();
@@ -8,6 +8,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const receiverId = document.getElementById('receiver_id').value;
         const houseId = document.getElementById('house_id').value;
         const message = document.getElementById('message-text').value;
+        const statusDiv = messageForm.querySelector(".message-status");
+
+        if(!message.trim()) {
+            statusDiv.textContent = "Type in a message.";
+            return;
+        }
 
         fetch('/send_message', {
             method: 'POST',
@@ -16,18 +22,19 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             body: JSON.stringify({ receiver_id: receiverId, house_id: houseId, message: message })
         })
-        .then(res => res.json())
+        .then(res => {
+            if(!res.ok) throw new error("Network error");
+            return res.json();
+        })
         .then(data => {
-            if (data.status === 'success') {
-                document.getElementById('message-status').textContent = 'Message sent!';
-                document.getElementById('message-text').value = '';
-            } else {
-                alert('Failed to send message');
-            }
+            statusDiv.textContent = "Message sent!";
+            statusDiv.style.color = "green";
+            messageForm.reset();
         })
         .catch(err => {
             console.error('Error sending message:', err);
-            alert('Server error.');
+            statusDiv.textContent = "Failed to send message";
+            statusDiv.style.color = "red";
         });
     });
 });
