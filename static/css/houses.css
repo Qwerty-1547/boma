@@ -1,0 +1,172 @@
+.house-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    background-color: #1f1f23;
+    border: 1px solid #333;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+    z-index: 1;
+    padding: 10px 15px;
+    cursor: pointer;
+}
+.house-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+    z-index: 10;
+    background-color: #2a2a2f;
+}
+
+.house-card h3 {
+    color: #f6faf7;
+}
+/*color of the text inside the house card*/
+.house-card p {
+    color: #c9d1d9;
+    margin: 0.3rem 0;
+}
+
+.house-image-wrapper {
+    overflow: hidden;
+    border-radius: var(--radius-md);
+}
+
+.house-image-wrapper img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    transition: transform 0.3s ease, filter 0.3s ease;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+/* 👇 Interactive effect on hover */
+.house-image-wrapper:hover img {
+    transform: scale(1.05);
+    filter: brightness(1.05);
+    cursor: pointer;
+}
+
+
+
+/* Slide-in panel */
+#house-detail-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 550px;
+    height: 100%;
+    background: #3c4146; /* soft off-white */
+    border-left: 1px solid #e0e0e0;
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.08);
+    overflow-y: auto;
+    z-index: 9999;
+    border-top-left-radius: 12px;
+    border-bottom-left-radius: 12px;
+    padding: 10px;
+    transform: translateX(100%);
+    transition: transform 0.4s ease-in-out, opacity 0.3s ease;
+    opacity: 0;
+}
+
+/* Show the panel */
+#house-detail-panel.show {
+    transform: translateX(0%);
+    opacity: 1;
+}
+
+/* Optional hidden class (can use JS to toggle) */
+#house-detail-panel.hidden {
+    transform: translateX(100%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+#house-detail-panel .panel-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    font-size: 15px;
+}
+
+.detail-row {
+    background: #f1f5f9; /* slate-100 */
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.detail-row strong {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 0.25rem;
+    color: #374151; /* slate-700 */
+}
+
+.detail-row p,
+.detail-row span {
+    margin: 0;
+    color: #111827; /* slate-900 */
+}
+#detail-verified.yes{
+    color: #065f46;
+    background-color: #d1fae5;
+}
+#detail-verified.no{
+    color: #92400e;
+    background-color: #fef3c7;
+}
+
+#close-btn {
+    background: #f44336;
+    color: #fff;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    float: right;
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+/* Image gallery */
+#detail-images {
+    min-height: 200px;
+    max-height: 400px;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 10px;
+    max-height: none;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 10px 0;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+}
+
+#detail-images img {
+    width: 260px;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+    scroll-snap-align: start;
+    cursor: pointer;
+}
+
+#detail-images img:hover{
+    transform: scale(1.1);
+}
+
+
+/*house layout in the pages, tenant & owner*/
+.house-list,
+#dynamicContent {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+    padding: 1rem;
+}

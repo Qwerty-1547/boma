@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/owner_dashboard.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/inbox.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/houses.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/btns.css') }}">
 
     <script src="{{ url_for('static', filename='js/inbox.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/section_loader.js') }}"></script>
@@ -36,7 +38,7 @@
 </header>
 <div id="content-area">
     <div class="container">
-        <h2 class="section-title">Your Recent Listings</h2>
+        <h2 class="titles">Your Recent Listings</h2>
 
         {% if houses %}
         <div class="house-list">
@@ -44,10 +46,10 @@
             <div class="house-card">
                 
                 <h3>{{ house.title }}</h3>
-                <p><strong>Area:</strong> {{ house.area_name }}</p>
-                <p><strong>Price:</strong> {{ house.price }}</p>
-                <p><strong>Status:</strong> {% if house.is_available %}Available{% else %}Unavailable{% endif %}</p>
-                <p><strong>Date Posted:</strong> {{ house.created_at.strftime('%b %d, %Y') }}</p>
+                <p><strong>Location:    </strong> {{ house.area_name }}</p>
+                <p><strong>Rent:        </strong> {{ house.price }}</p>
+                <p><strong>Status:      </strong> {% if house.is_available %}Available{% else %}Unavailable{% endif %}</p>
+                <p><strong>Date Posted: </strong> {{ house.created_at.strftime('%b %d, %Y') }}</p>
                 <div class="house-image-wrapper" style="margin-bottom: 1rem;">
                 {% if house.image_url %}
                     <img src="{{ url_for('static', filename='uploads/' ~ house.image_url) }}"
@@ -71,7 +73,7 @@
 
 <div id="inboxPanel" class="inbox-panel">
     <button id="closeInboxBtn" class="close-button" aria-label="Close inbox">×</button>
-    <h2 class="text-lg font-bold">Inbox</h2>
+    <h2 class="titles">Inbox</h2>
     <div id="inboxContent">Loading messages...
         <!-- Messages will be dynamically inserted here -->
     </div>

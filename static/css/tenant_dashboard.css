@@ -3,9 +3,9 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #343a40;
+    background-color: black;
     padding: 1rem;
-    color: white;
+    color: rgb(22, 21, 21);
     box-shadow: var(--shadow-sm);
 }
 

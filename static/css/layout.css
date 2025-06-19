@@ -1,16 +1,12 @@
 /* === layout.css === */
+/*area where houses are displayed, the container*/
 .container {
+    margin: 10px 10px;
     padding: 2rem;
+    background: linear-gradient(135deg, #08131f, #0b0718);
+    color: #e0e0f0;
+    background-attachment: fixed;
 }
-
-.house-list,
-#dynamicContent {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1rem;
-    padding: 1rem;
-}
-
 .nav-links,
 .nav-bar {
     display: flex;
@@ -31,3 +27,13 @@
     outline: 2px solid var(--color-focus);
     outline-offset: 2px;
 }
+
+.titles {
+  text-align: center;
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  color: #f7f7f7;
+  letter-spacing: 1px;
+}
+
+

@@ -13,7 +13,7 @@ from jinja2 import TemplateNotFound
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY')
-app.permanent_session_lifetime = timedelta(minutes=5)
+app.permanent_session_lifetime = timedelta(hours=1)
 
 import base64
 import json
@@ -176,6 +176,7 @@ def tenant_dashboard():
     cursor.execute("SELECT users.full_name AS user_name FROM users WHERE users.id = %s", (session.get('user_id'),))
     user_row = cursor.fetchone()
     user_name = user_row['user_name'] if user_row else "Guest"
+    last_name = user_name.strip().split()[-1]
 
     cursor.execute('''SELECT houses.*, areas.name AS area_name, users.full_name AS owner_name
                    FROM bookmarked_houses
@@ -187,7 +188,7 @@ def tenant_dashboard():
     bookmarked = cursor.fetchall()
     cursor.close()
     conn.close()
-    return render_template('tenant_dashboard.html', bookmarked=bookmarked, user_name=user_name)
+    return render_template('tenant_dashboard.html', bookmarked=bookmarked, user_name=last_name)
 
 @app.route('/owner_dashboard')
 @login_required
@@ -214,6 +215,7 @@ def owner_dashboard():
     cursor.execute('SELECT full_name FROM users WHERE id = %s', (user_id,))
     owner_value = cursor.fetchone()
     owner_name = owner_value['full_name'] if owner_value else 'unknown'
+    last_name = owner_name.strip().split()[-1]
     # Fetch houses owned by the user
     cursor.execute('''
         SELECT houses.*, areas.name AS area_name,
@@ -234,7 +236,7 @@ def owner_dashboard():
     cursor.close()
     conn.close()
 
-    return render_template('owner_dashboard.html', houses=houses, owner_name=owner_name) #is_verified=is_verified)
+    return render_template('owner_dashboard.html', houses=houses, owner_name=last_name) #is_verified=is_verified)
 
 @app.route('/logout', methods=['POST','GET'])
 def logout():

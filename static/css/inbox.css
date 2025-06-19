@@ -1,7 +1,13 @@
-/* === inbox.css === */
+/* === inbox.css (Dark Theme) === */
+
 .inbox-btn {
-    @extend .btn;
     background-color: var(--color-primary);
+    color: #f0f0f0;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.3s ease;
 }
 
 .inbox-btn:hover {
@@ -13,17 +19,21 @@
     top: 0;
     right: 0;
     width: 90%;
-    max-width: 350px;
+    max-width: 380px;
     height: 100%;
-    background: white;
-    box-shadow: -2px 0 15px rgba(0, 0, 0, 0.3);
+    background: linear-gradient(160deg, #1b1e2b, #1f1f23); /* subtle gradient */
+    backdrop-filter: blur(8px); /* glassy */
+    box-shadow: -5px 0 30px rgba(0, 0, 0, 0.6);
+    border-left: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: var(--radius-md) 0 0 var(--radius-md);
     padding: 1.5rem;
     z-index: 9999;
     overflow-y: auto;
     transform: translateX(100%);
     transition: transform 0.4s ease;
+    color: #e5e5f1;
 }
+
 
 .inbox-panel.open {
     transform: translateX(0);
@@ -36,14 +46,15 @@
     background: transparent;
     border: none;
     font-size: 1.5rem;
-    color: #333;
+    color: #aaa;
     cursor: pointer;
     transition: color 0.3s ease;
 }
 
 .inbox-panel .close-button:hover {
-    color: #ff4d4d;
+    color: #ff6b6b;
 }
+
 .inbox-list {
     list-style: none;
     padding: 0;
@@ -51,33 +62,33 @@
 }
 
 .message-item {
-    background: #f9f9f9;
-    border: 1px solid #ddd;
+    background: #2a2a2f;
+    border: 1px solid #333;
     border-radius: var(--radius-md);
     padding: 1rem;
     margin-bottom: 1rem;
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
     transition: background 0.3s ease;
 }
 
 .message-item:hover {
-    background: #eef4ff;
+    background: #343945;
 }
 
 .message-item p {
     margin: 0.5rem 0;
-    color: #333;
+    color: #ddd;
 }
 
 .timestamp {
     display: block;
     margin-top: 0.5rem;
     font-size: 0.85rem;
-    color: #888;
+    color: #999;
 }
 
 .empty-message {
     margin-top: 1rem;
     font-style: italic;
-    color: #666;
+    color: #777;
 }

@@ -19,17 +19,18 @@
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/btns.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/tenant_dashboard.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/inbox.css') }}">
-    <!--<link rel="stylesheet" href="{{ url_for('static', filename='css/houses.css') }}">-->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/houses.css') }}">
+    <link rel="stylesheer" href="{{url_for('static', filename='css/components.css') }}">
     <!---->
 </head>
 
 <body>
 
 <header class="dashboard-header">
-    <h1>Welcome {{ user_name }}</h1>
+    <h1>Welcome, {{ user_name }}</h1>
     <nav class="nav-bar">
         <button class="btn btn-primary" onclick="loadSection('houses')">View Houses</button>
         <button id="open-inbox" class="btn btn-primary">📨 Inbox</button>
