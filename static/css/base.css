@@ -10,9 +10,21 @@
 
     --color-primary: #007bff;
     --color-primary-hover: #0056b3;
-    --color-danger: #dc3545;
+    --color-danger: linear-gradient(135deg, #e11d48, #be123c);
     --color-danger-hover: #c82333;
     --color-focus: rgba(79, 70, 229, 0.5);
+}
+
+.nav-link.logout {
+  color: #f87171; /* soft red */
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.3s ease, text-shadow 0.3s ease;
+}
+
+.nav-link.logout:hover {
+  color: #fb7185; /* brighter red on hover */
+  text-shadow: 0 0 5px #fb7185;
 }
 
 body {
@@ -24,6 +36,7 @@ body {
 }
 .body-lock{
     overflow: hidden;
+    width: 100%;
 }
 
 h1, h2, h3 {
@@ -39,4 +52,4 @@ label {
   font-weight: bold;
   color: #a61c4c;
 }
-    
+        

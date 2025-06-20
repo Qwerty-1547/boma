@@ -4,7 +4,7 @@
     margin: 10px 10px;
     padding: 2rem;
     background: linear-gradient(135deg, #08131f, #0b0718);
-    color: #e0e0f0;
+    color: #121214;
     background-attachment: fixed;
 }
 .nav-links,
@@ -16,23 +16,27 @@
 }
 
 .nav-link {
-    color: white;
+    color: #7aa2f7;
     text-decoration: none;
     font-weight: bold;
 }
 
 .nav-link:hover,
 .nav-link:focus {
-    text-decoration: underline;
-    outline: 2px solid var(--color-focus);
-    outline-offset: 2px;
+    text-decoration: underline overline;
+    
 }
-
+.section-title {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    color: #fbbf24;
+    text-align: center;
+}
 .titles {
   text-align: center;
-  font-size: 1.8rem;
+  font-size: 1.2rem;
   margin-bottom: 1.5rem;
-  color: #f7f7f7;
+  color: #d6b4fc;
   letter-spacing: 1px;
 }
 

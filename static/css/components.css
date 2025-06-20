@@ -24,35 +24,6 @@ textarea {
     resize: vertical;
     height: 50px;
 }//////////////////////////////////*/
-.partial-add-house-container input[type="text"],
-.partial-add-house-container input[type="number"],
-.partial-add-house-container input[type="file"],
-.partial-add-house-container select,
-.partial-add-house-container textarea {
-    margin-bottom: 1.5px;
-  width: 100%;
-  padding: 0.75rem 1rem;
-  background: #2a2a2d;
-  color: #f4f4f4;
-  border: 1px solid #444;
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: border-color 0.3s ease, background 0.3s ease;
-}
-
-.partial-add-house-container input:focus,
-.partial-add-house-container textarea:focus,
-.partial-add-house-container select:focus {
-  border-color: #7aa2f7;
-  outline: none;
-  background: #33363a;
-}
-.partial-add-house-container input[type="file"] {
-  padding: 0.5rem;
-  background: #222;
-  border: none;
-  color: #f4f4f4;
-}
 
 
 /* who knows what it does

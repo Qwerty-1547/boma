@@ -20,14 +20,19 @@
 }
 
 .house-card h3 {
-    color: #f6faf7;
+    color: #e0e7ff;
 }
 /*color of the text inside the house card*/
 .house-card p {
-    color: #c9d1d9;
+    color: #b0b8c5;
     margin: 0.3rem 0;
 }
-
+.house-card .click-text:hover{
+    color: aqua;
+}
+.house-card strong {
+    color: #7aa2f7;
+}
 .house-image-wrapper {
     overflow: hidden;
     border-radius: var(--radius-md);
@@ -83,36 +88,47 @@
     opacity: 0;
     pointer-events: none;
 }
-
 #house-detail-panel .panel-content {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    font-size: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  font-size: 15px;
+  color: #e5e7eb; /* slate-100 */
 }
 
+/* Individual Info Rows */
 .detail-row {
-    background: #f1f5f9; /* slate-100 */
-    padding: 0.75rem 1rem;
-    border-radius: 8px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  background: #1f2937; /* slate-800 */
+  padding: 0.85rem 1.2rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  transition: background 0.3s ease;
 }
 
+.detail-row:hover {
+  background: #273144; /* slightly lighter on hover */
+}
+
+/* Labels (e.g. Price, Location) */
 .detail-row strong {
-    font-weight: 600;
-    display: block;
-    margin-bottom: 0.25rem;
-    color: #374151; /* slate-700 */
+  font-weight: 600;
+  display: block;
+  margin-bottom: 0.35rem;
+  color: #93c5fd; /* soft blue accent */
+  letter-spacing: 0.3px;
 }
 
+/* Content Text */
 .detail-row p,
 .detail-row span {
-    margin: 0;
-    color: #111827; /* slate-900 */
+  margin: 0;
+  color: #d1d5db; /* slate-200 */
+  line-height: 1.5;
 }
+
 #detail-verified.yes{
-    color: #065f46;
-    background-color: #d1fae5;
+    color: #023f2e;
+    background-color: #7ac79f;
 }
 #detail-verified.no{
     color: #92400e;
@@ -160,6 +176,25 @@
 #detail-images img:hover{
     transform: scale(1.1);
 }
+/*message text area styling in the slide in panel*/
+
+.message-form textarea {
+  width: 90%;
+  height: 80px;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  background-color: #1f1f23;   /* dark background */
+  color: #f0f0f0;
+  border: 1px solid #444;
+  resize: vertical;
+  transition: border-color 0.3s ease;
+}
+
+.message-form textarea:focus {
+  border-color: #7aa2f7;
+  outline: none;
+}
 
 
 /*house layout in the pages, tenant & owner*/
@@ -169,4 +204,34 @@
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 1rem;
     padding: 1rem;
+}
+/*partial add house fragment styling*/
+.partial-add-house-container input[type="text"],
+.partial-add-house-container input[type="number"],
+.partial-add-house-container input[type="file"],
+.partial-add-house-container select,
+.partial-add-house-container textarea {
+    margin-bottom: 1.5px;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: #2a2a2d;
+  color: #f4f4f4;
+  border: 1px solid #444;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease, background 0.3s ease;
+}
+
+.partial-add-house-container input:focus,
+.partial-add-house-container textarea:focus,
+.partial-add-house-container select:focus {
+  border-color: #7aa2f7;
+  outline: none;
+  background: #33363a;
+}
+.partial-add-house-container input[type="file"] {
+  padding: 0.5rem;
+  background: #222;
+  border: none;
+  color: #f4f4f4;
 }

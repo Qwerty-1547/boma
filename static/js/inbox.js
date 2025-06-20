@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 })
                 .then(html => {
                     content.innerHTML = html;
+                    document.body.classList.add("body-lock");
                     panel.classList.add('open');
                 })
                 .catch(error => {
@@ -25,11 +26,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         closeBtn.addEventListener('click', () => {
+            document.body.classList.remove("body-lock");
             panel.classList.remove('open');
         });
         document.addEventListener('click', (event) =>{
             const isClickInside= panel.contains(event.target) || openBtn.contains(event.target);
             if(!isClickInside) {
+                document.body.classList.remove("body-lock")
                 panel.classList.remove('open')
             }
         })

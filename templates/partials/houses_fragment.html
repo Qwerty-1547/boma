@@ -1,6 +1,6 @@
 {% block content %}
 <div class="container">
-    <h1 class="titles">House Listings</h1>
+    <h1 class="section-title">House Listings</h1>
 
     <div class="house-list">
         {% for house in houses %}
@@ -10,9 +10,11 @@
             onclick="showHouseDetailFromBase64(this); event.stopPropagation();">
 
             <h3 class="titles">{{ house.title }}</h3>
-            <p><strong>Description:</strong> {{ house.description }}</p>
+            <p><strong>Description: </strong> {{ house.description}}</p>
             <!--<p><strong>Price:</strong> KES {{ "{:,.0f}".format(house.price) }}</p>-->
-            <p><strong>Location:</strong> {{ house.area_name }}</p>
+            <p><strong>Location:</strong>{{ house.area_name }}</p>
+            <p><strong>Status:      </strong> {% if house.is_available %}Available{% else %}Unavailable{% endif %}</p>
+            <p class="click-text">Click to see more...</p>
             <!--<p><strong>Posted by:</strong> {{ house.owner_name }}</p>-->
             <!-- ✅ Image Section -->
             <div class="house-image-wrapper" >
@@ -68,7 +70,7 @@
         <div id="detail-images" class="image-gallery"></div>
                     <div class="action-section" style="margin-top: 1rem;">
                 <button class="btn btn-submit bookmark-btn" data-house-id="" title="Bookmark">
-                    <span class="bookmark-icon">🔖 Add bookmark</span>
+                    <span class="bookmark-icon"></span>
                 </button>
 
                 <h4 style="margin-top: 1rem;">Contact Owner</h4>

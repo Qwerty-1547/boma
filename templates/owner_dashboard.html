@@ -31,14 +31,14 @@
 <header class="dashboard-header">
     <h1>Welcome, {{ owner_name }}</h1>
     <nav class="nav-links">
-        <button class="btn btn-primary" onclick="loadSection('add_house')">Add New House</button>
-        <button id="open-inbox" class="btn btn-primary">📨 Inbox</button>
+        <button class="btn btn-submit" onclick="loadSection('add_house')">Add New House</button>
+        <button id="open-inbox" class="btn btn-submit">📨 Inbox</button>
         <a href="{{ url_for('logout') }}" class="nav-link logout">Logout</a>
     </nav>
 </header>
 <div id="content-area">
     <div class="container">
-        <h2 class="titles">Your Recent Listings</h2>
+        <h2 class="section-title">Your Recent Listings</h2>
 
         {% if houses %}
         <div class="house-list">
