@@ -9,6 +9,7 @@
             font-family: 'Segoe UI', sans-serif;
             background-image: url('/static/uploads/Boma.png');
             background-position: center;
+            background-attachment: fixed;
             /*backdrop-filter: blur(1px);*/
             margin: 0;
             padding: 2rem;
@@ -96,7 +97,7 @@
 
         <label for="area">Area</label>
         <select id="area" name="area" required>
-            <option value="" disabled selected>Select your area</option>
+            <option value="" disabled selected>Area You're interested In</option>
             {% for area in areas %}
                 <option value="{{ area.id }}">{{ area.name }}</option>
             {% endfor %}
@@ -104,7 +105,7 @@
 
         <label for="role">Role</label>
         <select id="role" name="role" required>
-            <option value="" disabled selected>Select your role</option>
+            <option value="" disabled selected>Tenant/Owner</option>
             {% for role in roles %}
                 <option value="{{ role.id }}">{{ role.role_name }}</option>
             {% endfor %}

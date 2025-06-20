@@ -3,9 +3,11 @@
 .container {
     margin: 10px 10px;
     padding: 2rem;
-    background: linear-gradient(135deg, #08131f, #0b0718);
-    color: #121214;
+    background-image: url(../uploads/Boma.png);
+    background-position: center;
     background-attachment: fixed;
+    /*color: #121214;
+    background-attachment: fixed;*/
 }
 .nav-links,
 .nav-bar {
@@ -25,6 +27,27 @@
 .nav-link:focus {
     text-decoration: underline overline;
     
+}
+.dashboard-header {
+    position: fixed;
+    box-sizing: border-box;
+    top: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: black;
+    padding: 1rem;
+    color: rgb(22, 21, 21);
+    box-shadow: var(--shadow-sm);
+    backdrop-filter: blur(5px);
+    z-index: 9999;
+}
+main{
+    margin-top: 40px;
+    padding: 1rem;
+    color: white;
 }
 .section-title {
     font-size: 2rem;

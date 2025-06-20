@@ -38,16 +38,19 @@
         <a href="{{ url_for('logout') }}" class="nav-link logout">Logout 🚪 </a>
     </nav>
 </header>
-
+<main>
+    
 <div id="inboxPanel" class="inbox-panel">
     <button id="closeInboxBtn" class="close-button" aria-label="Close inbox">×</button>
     <h2 class="text-lg font-bold">Inbox</h2>
     <div id="inboxContent">Loading messages...</div>
 </div>
 
-<main id="content-area">
+<section id="content-area">
     <!-- Sections like bookmarked houses or available houses will load here -->
-</main>
+</section>
 <div id="toast-container"></div>
+</main>
+
 </body>
 </html>

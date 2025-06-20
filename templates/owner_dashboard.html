@@ -33,10 +33,11 @@
     <nav class="nav-links">
         <button class="btn btn-submit" onclick="loadSection('add_house')">Add New House</button>
         <button id="open-inbox" class="btn btn-submit">📨 Inbox</button>
-        <a href="{{ url_for('logout') }}" class="nav-link logout">Logout</a>
+        <a href="{{ url_for('logout') }}" class="nav-link logout">Logout 🚪 </a>
     </nav>
 </header>
-<div id="content-area">
+<main>
+    <div id="content-area">
     <div class="container">
         <h2 class="section-title">Your Recent Listings</h2>
 
@@ -91,5 +92,6 @@
 
 </div>
 <div id="toast-container"></div>
+</main>
 </body>
 </html>
