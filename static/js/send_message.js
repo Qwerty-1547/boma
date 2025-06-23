@@ -1,17 +1,32 @@
+// ✅ This runs once when the page is first loaded
 document.addEventListener('DOMContentLoaded', () => {
-    const messageForm = document.getElementById('panel-message-form');
-    if (!messageForm) return;
+    // ❗ This won't work if the form is loaded dynamically (e.g., via a panel fragment).
+    // ❗ Use a reusable bind function instead (shown below).
 
-    form.addEventListener('submit', function (e) {
+    bindMessageForm(); // ✅ Run this at first load (in case it's present), and also after loading fragments
+});
+
+// ✅ Make this a reusable function so you can call it after dynamically loading the panel
+function bindMessageForm() {
+    const messageForm = document.getElementById('panel-message-form');
+    if (!messageForm) return; // 🔧 FIXED: this was okay
+
+    messageForm.onsubmit = function (e) {
         e.preventDefault();
 
-        const receiverId = document.getElementById('receiver_id').value;
-        const houseId = document.getElementById('house_id').value;
+        const sendBtn = messageForm.querySelector('button[type="submit"]');
+        sendBtn.disabled = true;
+
+        // 📌 FIXED: input IDs were wrong. Your hidden fields use "form-receiver-id", not "form-receiver_id"
+        const receiverId = document.getElementById('form-receiver-id').value;
+        const houseId = document.getElementById('form-house-id').value;
         const message = document.getElementById('message-text').value;
         const statusDiv = messageForm.querySelector(".message-status");
 
-        if(!message.trim()) {
+        if (!message.trim()) {
             statusDiv.textContent = "Type in a message.";
+            statusDiv.style.color = "red"; // 📌 Added for feedback visibility
+            sendBtn.disabled = false;
             return;
         }
 
@@ -20,21 +35,32 @@ document.addEventListener('DOMContentLoaded', () => {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ receiver_id: receiverId, house_id: houseId, message: message })
+            body: JSON.stringify({
+                receiver_id: receiverId,
+                house_id: houseId,
+                message: message
+            })
         })
         .then(res => {
-            if(!res.ok) throw new error("Network error");
+            if (!res.ok) throw new Error("Network error"); // 📌 FIXED typo: was 'error' instead of 'Error'
             return res.json();
         })
         .then(data => {
-            statusDiv.textContent = "Message sent!";
-            statusDiv.style.color = "green";
-            messageForm.reset();
+            if (data.success) { // ✅ Check the success flag from Flask
+                showToast(`Message sent!`, 'success');
+                statusDiv.textContent = "";
+                messageForm.reset();
+            } else {
+                showToast(data.error || "Failed to send message.", 'error')
+            }
         })
         .catch(err => {
             console.error('Error sending message:', err);
-            statusDiv.textContent = "Failed to send message";
-            statusDiv.style.color = "red";
+            showToast("Failed to send message. Check your connection", 'error')
+            statusDiv.textContent = "";
+        })
+        .finally(() => {
+            sendBtn.disabled = false;
         });
-    });
-});
+    };
+}

@@ -106,6 +106,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }else{
             imageContainer.innerHTML = "<p>No images posted.</p>"
         }
+        bindMessageForm();
     }
 
     window.hideHouseDetail = function () {

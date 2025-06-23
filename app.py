@@ -537,8 +537,10 @@ def toggle_bookmark():
 @app.route('/send_message', methods=['POST'])
 @login_required
 def send_message():
-    data = request.json
+    data = request.get_json()
     sender_id = session['user_id']
+    if not sender_id:
+        return jsonify({'status': 'error', 'message': 'Not logged in'}), 401
     receiver_id = data.get('receiver_id')
     house_id = data.get('house_id')  # Optional
     message = data.get('message')
@@ -558,7 +560,7 @@ def send_message():
     cursor.close()
     conn.close()
 
-    return jsonify({'status': 'success'})
+    return jsonify({'success': True})
     
 @app.route('/inbox_data')
 @login_required
@@ -569,12 +571,13 @@ def inbox_data():
         cursor = conn.cursor()
 
         cursor.execute("""
-            SELECT m.id, m.message, m.house_id, m.sent_at, u.full_name AS sender_name
+            SELECT m.id, m.sender_id, m.message, m.house_id, m.sent_at, u.full_name AS sender_name
             FROM messages m
             JOIN users u ON m.sender_id = u.id
-            WHERE m.receiver_id = %s
+            LEFT JOIN cleared_notifications c ON c.message_id = m.id AND c.user_id = %s
+            WHERE m.receiver_id = %s AND c.message_id is NULL
             ORDER BY m.sent_at DESC
-        """, (user_id,))
+        """, (user_id, user_id))
         rows = cursor.fetchall()
 
         messages = []
@@ -584,7 +587,8 @@ def inbox_data():
                 'house_id': row['house_id'],
                 'message': row['message'],
                 'sent_at': row['sent_at'],
-                'sender_name': row['sender_name']
+                'sender_name': row['sender_name'],
+                'sender_id' : row['sender_id']
             })
 
         cursor.close()
@@ -595,6 +599,36 @@ def inbox_data():
         print("Error in /get_inbox:", e)
         traceback.print_exc()
         return jsonify({'error': 'Server error'}), 500
+    
+@app.route('/clear_notification', methods=['POST'])
+@login_required
+def clear_notification():
+    data = request.get_json()
+    user_id = session['user_id']
+    message_id = data.get('message_id')
+
+    if not message_id:
+        return jsonify({'success': False, 'error': 'Missing message ID'}), 400
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("""
+            INSERT IGNORE INTO cleared_notifications (user_id, message_id)
+                       VALUES (%s, %s)
+                       """, (user_id, message_id))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        print("error in clear_notification", e)
+        cursor.close()
+        conn.close()
+        return jsonify({'success': False, 'error': 'DB error'}), 500
+    
+    cursor.close()
+    conn.close()
+    return jsonify({'success': True})
 
 
 

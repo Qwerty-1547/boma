@@ -17,7 +17,7 @@
         <div class="house-card">
             <h3>{{ house.title }}</h3>
             <p><strong>Owner:</strong> {{ house.owner_name }}</p>
-            <p>
+            <p><strong>Description</strong>
                 {{ house.description[:150] }}{% if house.description|length > 150 %}...{% endif %}
             </p>
 

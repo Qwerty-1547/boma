@@ -5,9 +5,7 @@
   <div class="house-card">
       <h3>{{ house.title }}</h3>
       <p><strong>Owner:</strong> {{ house.owner_name }}</p>
-      <p>
-          {{ house.description[:150] }}{% if house.description|length > 150 %}...{% endif %}
-      </p>
+      <p><strong>Description</strong> {{ house.description[:150] }}{% if house.description|length > 150 %}...{% endif %}</p>
 
       {% if session.get('user_id') == 1 %}
           <a href="{{ url_for('available_houses', house_id=house.id) }}" class="view-link btn btn-primary">View Details</a>

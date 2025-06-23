@@ -74,12 +74,12 @@
                 </button>
 
                 <h4 style="margin-top: 1rem;">Contact Owner</h4>
-                <form class="message-form" id = "panel-message-form"    >
+                <form class="message-form" id = "panel-message-form" onsubmit="return false"   >
                     <input type="hidden" name="receiver_id" id="form-receiver-id">
                     <input type="hidden" name="house_id" id="form-house-id">
 
-                    <textarea name="message" placeholder="Type your message..." required></textarea>
-                    <button type="submit" class="btn btn-submit">✉ Send Message</button>
+                    <textarea name="message" id="message-text" placeholder="Type your message..." required></textarea>
+                    <button type="submit"  class="btn btn-submit">✉ Send Message</button>
                     <div class="message-status" style="margin-top: 0.5rem; color: green;"></div>
                 </form>
             </div>

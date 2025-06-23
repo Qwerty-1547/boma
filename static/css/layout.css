@@ -5,7 +5,8 @@
     padding: 2rem;
     background-image: url(../uploads/Boma.png);
     background-position: center;
-    background-attachment: fixed;
+    background-attachment: fixed
+    ;
     /*color: #121214;
     background-attachment: fixed;*/
 }

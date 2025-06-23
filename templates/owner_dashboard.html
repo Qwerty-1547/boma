@@ -10,22 +10,16 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/inbox.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/houses.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/btns.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/toast.css') }}">
 
-    <script src="{{ url_for('static', filename='js/inbox.js') }}" defer></script>
-    <script src="{{ url_for('static', filename='js/section_loader.js') }}"></script>
     <script src="{{ url_for( 'static', filename='js/main.js') }}"></script>
-    <script src="{{url_for( 'static', filename='js/showHouseDetail.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/section_loader.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/inbox.js') }}" defer></script>
+    <script src ="{{ url_for('static', filename='js/send_message.js') }}"></script>
+    
+    
 </head>
-<script>
-    document.getElementById('addHouseForm').addEventListener('submit', function(event){
-        const imageInput = document.getElementById('images')
-        const files = imageInput.files;
-        if(files.length<2){
-            alert("Upload at least two images");
-            event.preventDefault();
-        }
-    });
-</script>
+
 <body>
 
 <header class="dashboard-header">
