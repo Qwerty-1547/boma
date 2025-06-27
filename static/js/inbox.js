@@ -42,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+
 // ✅ Moved here as a reusable function
 function bindInboxActions() {
     // Bind reply send buttons
