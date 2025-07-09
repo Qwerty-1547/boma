@@ -198,13 +198,12 @@
 
 
 /*house layout in the pages, tenant & owner*/
-.house-list,
-#dynamicContent {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1rem;
-    padding: 1rem;
+
+#content-area {
+    width: 100%;
+    padding-top: 1rem;
 }
+
 /*partial add house fragment styling*/
 .partial-add-house-container input[type="text"],
 .partial-add-house-container input[type="number"],
@@ -234,4 +233,9 @@
   background: #222;
   border: none;
   color: #f4f4f4;
+}
+.house-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
 }

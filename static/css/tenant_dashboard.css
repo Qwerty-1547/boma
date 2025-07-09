@@ -24,6 +24,7 @@
 
     .house-list,
     #dynamicContent {
+        display: grid;
         grid-template-columns: 1fr;
     }
 

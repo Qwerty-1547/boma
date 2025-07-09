@@ -23,7 +23,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/tenant_dashboard.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/inbox.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/houses.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+<!--    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">  -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/toast.css') }}">
     <!---->
 </head>
@@ -33,12 +33,41 @@
 <header class="dashboard-header">
     <h1>Welcome, {{ user_name }}</h1>
     <nav class="nav-links">
-        <button class="btn btn-submit" onclick="loadSection('houses')">View Houses</button>
+        <!--button class="btn btn-submit" onclick="loadSection('houses')">View Houses</button-->
         <button id="open-inbox" class="btn btn-submit">📨 Inbox</button>
         <a href="{{ url_for('logout') }}" class="nav-link logout">Logout 🚪 </a>
     </nav>
 </header>
-<main>
+<main class="dashboard-main">
+<aside class="filter-sidebar">
+
+    <form id="filterForm">
+        <h3>Filter Houses</h3>
+        <label>House Type</label>
+        <select name="title">
+            <option value="">All Houses</option>
+            {% for title in titles %}
+            <option value="{{ title}}">{{ title }}</option>
+            {% endfor %}
+        </select>
+
+        <label>Area</label>
+        <select name="location">
+            <option value="">All Areas</option>
+            {% for loc in locations %}
+             <option value="{{ loc }}">{{ loc }}</option>
+             {% endfor %}
+        </select>
+
+        <label>Min Price</label>
+        <input type="number" name="min_price" placeholder="min-price">
+        <label>Max Price</label>
+        <input type="number" name="max_price" placeholder="max-price">
+
+        <button type="submit">Filter</button>
+    </form>
+</aside>
+<div class="main-content">
     
 <div id="inboxPanel" class="inbox-panel">
     <button id="closeInboxBtn" class="close-button" aria-label="Close inbox">×</button>
@@ -50,7 +79,7 @@
     <!-- Sections like bookmarked houses or available houses will load here -->
 </section>
 <div id="toast-container"></div>
+</div>
 </main>
-
 </body>
 </html>

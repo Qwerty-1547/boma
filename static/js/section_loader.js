@@ -9,6 +9,9 @@ function loadSection(section) {
         })
         .then(html => {
             contentArea.innerHTML = html;
+            //notify othe rscripts that new content was injected
+            document.dispatchEvent(new Event('sectionLoaded'))
+            
             //reloading the add_house form in case of error
             if(section === 'add_house' && typeof window.initAddHouseForm === 'function'){
                 window.initAddHouseForm();

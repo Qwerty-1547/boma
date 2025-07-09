@@ -1,15 +1,6 @@
 /* === layout.css === */
 /*area where houses are displayed, the container*/
-.container {
-    margin: 10px 10px;
-    padding: 2rem;
-    background-image: url(../uploads/Boma.png);
-    background-position: center;
-    background-attachment: fixed
-    ;
-    /*color: #121214;
-    background-attachment: fixed;*/
-}
+
 .nav-links,
 .nav-bar {
     display: flex;
@@ -34,6 +25,7 @@
     box-sizing: border-box;
     top: 0;
     left: 0;
+    height: 70px;
     width: 100%;
     display: flex;
     justify-content: space-between;
@@ -46,7 +38,7 @@
     z-index: 9999;
 }
 main{
-    margin-top: 40px;
+    margin-top: 70px;
     padding: 1rem;
     color: white;
 }
@@ -64,4 +56,61 @@ main{
   letter-spacing: 1px;
 }
 
+.dashboard-main {
+  display: flex;
+  align-items: flex-start;
+  min-height: calc(100vh-70px);
+  gap: 20px;
+  padding: 20px;
+}
+
+.filter-sidebar {
+  position: sticky;
+  top: 70px;
+  align-self: flex-start;
+  width: 250px;
+  height: fit-content;
+  width: 250px;
+  background-color: #252323;
+  padding: 20px;
+  border-radius: var(--radius-md);
+  border: 1px solid #601010;
+}
+
+.filter-sidebar form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.filter-sidebar select,
+.filter-sidebar input {
+  padding: 8px;
+  border-radius: 5px;
+  border: 1px solid #aaa;
+}
+
+.filter-sidebar button {
+  background-color: #007bff;
+  color: white;
+  padding: 8px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.filter-sidebar button:hover {
+  background-color: #0056b3;
+}
+
+.main-content {
+  flex: 1;
+  max-width: 100%;
+  height: calc(100vh - 10px);
+  overflow-y: auto;
+  overflow-x: auto;
+  padding: 1 rem;
+  background: #121111;
+  border-radius: var(--radius-1g);
+}
 

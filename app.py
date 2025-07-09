@@ -186,9 +186,17 @@ def tenant_dashboard():
                    WHERE bookmarked_houses.user_id = %s''',
                    (session.get('user_id'),))
     bookmarked = cursor.fetchall()
+
+    cursor.execute("SELECT name FROM areas")
+    locations = [row['name'] for row in cursor.fetchall()]
+
+    cursor.execute("SHOW COLUMNS FROM houses LIKE 'title'")
+    raw_enum = cursor.fetchone()['Type']
+    titles = raw_enum.strip("enum()").replace("'", "").split(",")
+    print(locations, titles)
     cursor.close()
     conn.close()
-    return render_template('tenant_dashboard.html', bookmarked=bookmarked, user_name=last_name)
+    return render_template('tenant_dashboard.html', bookmarked=bookmarked, user_name=last_name, locations=locations, titles=titles)
 
 @app.route('/owner_dashboard')
 @login_required
@@ -347,9 +355,13 @@ def add_house():
         return redirect(url_for('dashboard'))
     cursor.execute("SELECT id, name FROM areas")
     areas = cursor.fetchall()
+    cursor.execute("SHOW COLUMNS FROM houses LIKE 'title'")
+    enum_raw = cursor.fetchone()['Type']
+    title_options = enum_raw.strip("enum()").replace("'", "").split(",")
+    #print(title_options)
     cursor.close()
     conn.close()
-    return render_template('partials/add_house_fragment.html', areas=areas)
+    return render_template('partials/add_house_fragment.html', areas=areas, titles=title_options)
 
 #uploading houses and images
 @app.route('/partials/add_house', methods=['POST'], endpoint='add_house_post')
@@ -379,7 +391,15 @@ def add_house_post():
         price = request.form.get('price')
         address = request.form.get('address')
         area_id = request.form.get('area_id')
+        latitude = request.form.get('latitude')
+        longitude = request.form.get('longitude')
 
+        try:
+            latitude = float(latitude)
+            longitude = float(longitude)
+        except(TypeError, ValueError):
+            return jsonify({'Error': 'Invalid coordinates'}), 400
+        
         # Validate required fields
         if not all([title, description, price, address, area_id]):
             return jsonify({'error': 'All fields are required'}), 400
@@ -403,9 +423,9 @@ def add_house_post():
         os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
         # Insert house record
-        cursor.execute('''INSERT INTO houses (owner_id, title, description, price, address, area_id)
-                          VALUES (%s, %s, %s, %s, %s, %s)''',
-                       (session['user_id'], title, description, price, address, area_id))
+        cursor.execute('''INSERT INTO houses (owner_id, title, description, price, address, area_id, latitude, longitude)
+                          VALUES (%s, %s, %s, %s, %s, %s, %s, %s)''',
+                       (session['user_id'], title, description, price, address, area_id, latitude, longitude))
         house_id = cursor.lastrowid
 
         # Save images and insert into DB
