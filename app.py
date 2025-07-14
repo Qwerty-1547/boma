@@ -193,10 +193,13 @@ def tenant_dashboard():
     cursor.execute("SHOW COLUMNS FROM houses LIKE 'title'")
     raw_enum = cursor.fetchone()['Type']
     titles = raw_enum.strip("enum()").replace("'", "").split(",")
-    print(locations, titles)
+    #print(locations, titles)
+    cursor.execute("SELECT id, name FROM amenities ORDER BY name ASC")
+    amenities = cursor.fetchall()
+    #print(amenities)
     cursor.close()
     conn.close()
-    return render_template('tenant_dashboard.html', bookmarked=bookmarked, user_name=last_name, locations=locations, titles=titles)
+    return render_template('tenant_dashboard.html', bookmarked=bookmarked, user_name=last_name, locations=locations, titles=titles, amenities=amenities)
 
 @app.route('/owner_dashboard')
 @login_required
@@ -650,7 +653,82 @@ def clear_notification():
     conn.close()
     return jsonify({'success': True})
 
+@app.route('/filter_houses', methods=['POST'])
+@login_required
+def filter_houses():
+    filters = request.get_json()
+    title = filters.get('title', '').strip()
+    location = filters.get('location', '').strip()
+    min_price = filters.get('min_price')
+    max_price = filters.get('max_price')
+    amenity_ids = filters.get('amenities', [])
+    if isinstance(amenity_ids, str):
+        amenity_ids = [int(a.strip()) for a in amenity_ids.split(',') if a.strip().isdigit()]
 
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    house_ids_with_amenities = []
+    if amenity_ids:
+        placeholders = ','.join(['%s'] * len(amenity_ids))
+        count_required = len(amenity_ids)
+        subquery = f'''
+        SELECT house_id
+        FROM house_amenities
+        WHERE amenity_id IN ({placeholders})
+        GROUP BY house_id
+        HAVING COUNT(DISTINCT amenity_id) = {count_required}
+        '''
+        cursor.execute(subquery, amenity_ids)
+        results = cursor.fetchall()
+        house_ids_with_amenities = [row['house_id'] for row in results]
+
+
+    query = '''
+        SELECT houses.*, areas.name AS area_name, users.full_name AS owner_name,
+        (
+        SELECT image_url
+        FROM house_images
+        WHERE house_images.house_id = houses.id
+        ORDER BY id ASC
+        LIMIT 1
+        ) AS image_filename
+    FROM houses
+    JOIN areas ON houses.area_id = areas.id
+    JOIN users ON houses.owner_id = users.id
+    WHERE houses.is_available = 1
+    '''
+    params = []
+    if title:
+        query += 'AND houses.title LIKE %s'
+        params.append(f'%{title}%')
+
+    if location:
+        query += 'AND areas.name LIKE %s'
+        params.append(f'%{location}%')
+
+    if min_price:
+        query += 'AND houses.price >= %s'
+        params.append(min_price)
+
+    if max_price:
+        query += 'AND houses.price <= %s'
+        params.append(max_price)
+
+    if amenity_ids:
+        if house_ids_with_amenities:
+            placeholders = ','.join(['%s'] * len(house_ids_with_amenities))
+            query += f' AND houses.id IN ({placeholders})'
+            params.extend(house_ids_with_amenities)
+        else:
+            return render_template('partials/houses_fragment.html', houses=[])
+        
+
+    cursor.execute(query, params)
+    houses = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return render_template('partials/houses_fragment.html', houses=houses)
 
 app.before_request 
 def make_Session_permanent():
