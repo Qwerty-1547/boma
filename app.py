@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, session, url_for, flash, jsonify, make_response
+from flask import Flask, render_template, request, redirect, session, url_for, flash, jsonify, make_response, current_app
 import pymysql.cursors
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename 
@@ -248,6 +248,43 @@ def owner_dashboard():
     conn.close()
 
     return render_template('owner_dashboard.html', houses=houses, owner_name=last_name) #is_verified=is_verified)
+
+@app.route('/delete_house/<int:house_id>', methods=['POST'])
+@login_required
+def delete_house(house_id):
+    user_id = session['user_id']
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute('''
+        SELECT id FROM houses
+                   WHERE id =%s AND owner_id = %s
+                   ''',(house_id, user_id))
+    result = cursor.fetchone()
+
+    if not result:
+        cursor.close()
+        conn.close()
+        return "Unauthorized/ House does not exist", 403
+    
+    cursor.execute('SELECT image_url FROM house_images WHERE house_id = %s', (house_id,))
+    image_rows = cursor.fetchall()
+    for row in image_rows:
+        image_path = os.path.join(current_app.root_path, 'static', 'uploads', row['image_url'])
+        if os.path.exists(image_path):
+            try:
+                os.remove(image_path)
+            except Exception as e:
+                print(f"Error deleting file {image_path}: {e}")
+    
+    cursor.execute('DELETE FROM house_images WHERE house_id = %s', (house_id,))
+    cursor.execute('DELETE FROM houses WHERE id = %s', (house_id,))
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+    return "House Deleted", 200
 
 @app.route('/logout', methods=['POST','GET'])
 def logout():

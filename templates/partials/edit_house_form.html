@@ -1,0 +1,53 @@
+<div class="container">
+    <h2>Edit House</h2>
+    <form id="edit-house-form" enctype="multipart/form-data">
+        <input type="hidden" name="house_id" value="{{ house.id }}">
+
+        <label>Title</label>
+        <input type="text" name="title" value="{{ house.title }}" required>
+
+        <label>Price</label>
+        <input type="number" name="price" value="{{ house.price }}" required>
+
+        <label>Description</label>
+        <textarea name="description" required>{{ house.description }}</textarea>
+
+        <label>Location (Area)</label>
+        <select name="area_id" required>
+            {% for area in areas %}
+            <option value="{{ area.id }}" {% if area.id == house.area_id %}selected{% endif %}>
+                {{ area.name }}
+            </option>
+            {% endfor %}
+        </select>
+
+        <label>Amenities</label>
+        <div class="amenity-options-list">
+            {% for amenity in all_amenities %}
+            <label class="amenity-checkbox">
+                <input type="checkbox"
+                       name="amenities"
+                       value="{{ amenity.id }}"
+                       {% if amenity.id in house_amenities %}checked{% endif %}>
+                {{ amenity.name }}
+            </label>
+            {% endfor %}
+        </div>
+
+        <label>Images</label>
+        <div class="existing-images">
+            {% for img in images %}
+            <div class="image-preview">
+                <img src="{{ url_for('static', filename='uploads/' ~ img.image_url) }}"
+                     alt="House Image" style="width: 150px; height: 100px; object-fit: cover;">
+                <button type="button" class="btn btn-danger remove-image-btn" data-img-id="{{ img.id }}">Remove</button>
+            </div>
+            {% endfor %}
+        </div>
+
+        <label>Add New Images</label>
+        <input type="file" name="new_images" accept="image/*" multiple>
+
+        <button type="submit" class="btn btn-submit">Save Changes</button>
+    </form>
+</div>

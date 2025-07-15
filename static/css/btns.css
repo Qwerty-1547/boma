@@ -1,30 +1,33 @@
 /* Button Utilities */
+:root {
+    --color-primary: #3b82f6;         /* Blue 500 */
+    --color-primary-hover: #2563eb;   /* Blue 600 */
+    --color-danger: #ef4444;          /* Red 500 */
+    --color-danger-hover: #dc2626;    /* Red 600 */
+    --color-focus: #c084fc;           /* Violet 400 */
+    --radius-sm: 6px;
+    --radius-xs: 4px;
+}
+
+/* Base Button */
 .btn {
     border: none;
-    padding: 0.5rem 1rem;
+    padding: 0.45rem 0.85rem;
     border-radius: var(--radius-sm);
     cursor: pointer;
-    font-size: 1rem;
-    color: rgb(243, 230, 230);
-    transition: background 0.3s ease, transform 0.3s ease;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #ffffff;
+    transition: background 0.25s ease, transform 0.2s ease;
 }
 
-.btn-primary {
-    background-color: var(--color-primary);
+/* Focus Outline */
+.btn:focus {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
 }
 
-.btn-primary:hover {
-    background-color: var(--color-primary-hover);
-}
-
-.btn-danger {
-    background: var(--color-danger);
-}
-
-.btn-danger:hover {
-    background: var(--color-danger-hover);
-}
-
+/* Submit Button (Gradient Style) */
 .btn-submit {
     background: linear-gradient(135deg, #4f46e5, #7c3aed);
 }
@@ -38,7 +41,39 @@
     transform: translateY(0);
 }
 
-.btn:focus {
-    outline: 2px solid var(--color-focus);
-    outline-offset: 2px;
+/* Primary Button (Edit) */
+.btn-primary {
+    background-color: var(--color-primary);
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.btn-primary:hover {
+    background-color: var(--color-primary-hover);
+    transform: translateY(-1px);
+}
+
+.btn-primary:active {
+    transform: scale(0.97);
+}
+
+/* Danger Button (Delete) */
+.btn-danger {
+    background-color: var(--color-danger);
+    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+}
+
+.btn-danger:hover {
+    background-color: var(--color-danger-hover);
+    transform: translateY(-1px);
+}
+
+.btn-danger:active {
+    transform: scale(0.97);
+}
+
+/* Small Button Variant (optional for cards) */
+.btn-sm {
+    font-size: 0.85rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: var(--radius-xs);
 }
