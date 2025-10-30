@@ -20,4 +20,171 @@ header h1 {
     transform: scale(1.02);
 }
 
+/*edit house details partial*/
+:root {
+  --bg-dark: #121826;
+  --card-dark: #1e2433;
+  --input-dark: #2c3344;
+  --text-light: #f0f0f0;
+  --text-muted: #a0a3b1;
+  --gradient-start: #3a8ef6;
+  --gradient-end: #9333ea;
+  --danger: #ef4444;
+  --danger-hover: #dc2626;
+  --radius: 0.75rem;
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+/* Page Background */
+body {
+  background-color: var(--bg-dark);
+  color: var(--text-light);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Container */
+.container1 {
+  max-width: 760px;
+  margin: 2rem auto;
+  background: var(--card-dark);
+  padding: 2.5rem;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+/* Title */
+.container h2 {
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Form */
+form#edit-house-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Labels */
+
+
+/* Inputs */
+input[type="text"],
+input[type="number"],
+textarea,
+select {
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: var(--radius);
+  background-color: var(--input-dark);
+  color: var(--text-light);
+  font-size: 1rem;
+}
+
+/* Textarea */
+textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Amenities */
+.amenity-options-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+
+.amenity-checkbox {
+  background: linear-gradient(135deg, #374151, #1f2937);
+  border-radius: var(--radius);
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-light);
+  font-size: 0.95rem;
+  box-shadow: inset 0 0 0 1px #4b5563;
+}
+
+.amenity-checkbox input {
+  transform: scale(1.2);
+}
+
+/* Image Preview */
+.existing-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.image-preview {
+  position: relative;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.image-preview img {
+  width: 150px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: var(--radius);
+}
+
+.remove-image-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  font-size: 0.75rem;
+  background-color: var(--danger);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.remove-image-btn:hover {
+  background-color: var(--danger-hover);
+}
+
+/* File Upload */
+input[type="file"] {
+  background-color: var(--input-dark);
+  color: var(--text-muted);
+  border-radius: var(--radius);
+  padding: 0.5rem;
+  cursor: pointer;
+}
+
+/* Submit Button */
+button[type="submit"] {
+  margin-top: 1.5rem;
+  align-self: flex-end;
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  border: none;
+  padding: 0.75rem 1.6rem;
+  border-radius: var(--radius);
+  font-size: 1rem;
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.4);
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+button[type="submit"]:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, var(--gradient-end), var(--gradient-start));
+}
+
+button[type="submit"]:active {
+  transform: translateY(0);
+}
 

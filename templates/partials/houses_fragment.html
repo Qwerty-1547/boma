@@ -36,6 +36,8 @@
         {% endfor %}
     </div>
 {% endblock %}
+
+
 <!-- Sliding Detail Panel -->
 <div id="house-detail-panel" class="hidden">
     <button id="close-panel" title="Close panel" onclick="hideHouseDetail()">X</button>
@@ -56,7 +58,15 @@
         <div class="detail-row">
             <strong>Location:</strong>
             <p id="detail-area"></p>
+            <button id="view-map-btn" class="map-btn"
+            data-lat=""
+            data-lng="">View On Map</button>
         </div>
+        <div id="map-container" class="map-container" style="display: none;">
+  <iframe id="map-frame" width="100%" height="200" style="border:0;" allowfullscreen></iframe>
+  <iframe id="street-view-frame" width="100%" height="200" style="border:0;" allowfullscreen></iframe>
+</div>
+
         <div class="detail-row">
             <strong>Owner:</strong>
             <p id="detail-owner"></p>

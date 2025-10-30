@@ -1,6 +1,6 @@
-<div class="container">
+<div class="container1">
     <h2>Edit House</h2>
-    <form id="edit-house-form" enctype="multipart/form-data">
+    <form id="edit-house-form" method="POST" enctype="multipart/form-data" action="{{ url_for('update_house') }}">
         <input type="hidden" name="house_id" value="{{ house.id }}">
 
         <label>Title</label>

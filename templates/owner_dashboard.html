@@ -20,6 +20,7 @@
     <script src ="{{ url_for('static', filename='js/send_message.js') }}"></script>
     <script src="{{ url_for('static', filename='js/add_map.js') }}"></script>
     <script src="{{ url_for('static', filename='js/owner_dashboard.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/edit_house.js') }}" defer></script>
     
     
 </head>
@@ -60,8 +61,8 @@
                          style="width: 100%; height: 200px; object-fit: cover; opacity: 0.6; border-radius: var(--radius-md);">
                 {% endif %}
                 <div class="card-actions">
-                    <button class="btn btn-primary btn-sm"
-                            onclick="loadEditForm({{ house.id }})">
+                    <button class="btn btn-primary btn-sm edit-btn"
+                        data-id = "{{ house.id }}">
                         ✏️ Edit
                     </button>
                     <button class="btn btn-danger btn-sm delete-btn"

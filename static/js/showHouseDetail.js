@@ -38,6 +38,10 @@ document.addEventListener("DOMContentLoaded", function () {
         //document.getElementById("bookmark-btn").setAttribute("data-house-id", house.id);
         const bookmarkBtn = document.querySelector(".bookmark-btn");
 
+        const mapBtn = document.getElementById('view-map-btn');
+        mapBtn.dataset.lat = house.latitude;
+        mapBtn.dataset.lng = house.longitude;
+
         const newBtn = bookmarkBtn.cloneNode(true);
         bookmarkBtn.parentNode.replaceChild(newBtn, bookmarkBtn);
         const bookmarkIcon = newBtn.querySelector(".bookmark-icon");
@@ -111,6 +115,20 @@ document.addEventListener("DOMContentLoaded", function () {
 
     window.hideHouseDetail = function () {
         const panel = document.getElementById("house-detail-panel");
+
+        //clear the map iframe
+        const mapFrame = document.getElementById("map-frame");
+        const streetFrame = document.getElementById("street-view-frame");
+        const mapContainer = document.getElementById("map-container");
+
+        if(mapContainer){
+            mapContainer.style.display = 'none';
+            mapContainer.classList.remove('show');
+        }
+        if(mapFrame) mapFrame.scr = '';
+        if(streetFrame) streetFrame.src = '';
+        console.log("panel closed-map cleared");
+
         panel.classList.remove("show");
         document.body.classList.remove("body-lock");
         setTimeout(() => panel.classList.add("hidden"), 300);

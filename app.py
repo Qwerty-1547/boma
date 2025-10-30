@@ -201,6 +201,152 @@ def tenant_dashboard():
     conn.close()
     return render_template('tenant_dashboard.html', bookmarked=bookmarked, user_name=last_name, locations=locations, titles=titles, amenities=amenities)
 
+@app.route('/filter_houses', methods=['POST'])
+@login_required
+def filter_houses():
+    filters = request.get_json()
+    title = filters.get('title', '').strip()
+    location = filters.get('location', '').strip()
+    min_price = filters.get('min_price')
+    max_price = filters.get('max_price')
+    amenity_ids = filters.get('amenities', [])
+    if isinstance(amenity_ids, str):
+        amenity_ids = [int(a.strip()) for a in amenity_ids.split(',') if a.strip().isdigit()]
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    house_ids_with_amenities = []
+    if amenity_ids:
+        placeholders = ','.join(['%s'] * len(amenity_ids))
+        count_required = len(amenity_ids)
+        subquery = f'''
+        SELECT house_id
+        FROM house_amenities
+        WHERE amenity_id IN ({placeholders})
+        GROUP BY house_id
+        HAVING COUNT(DISTINCT amenity_id) = {count_required}
+        '''
+        cursor.execute(subquery, amenity_ids)
+        results = cursor.fetchall()
+        house_ids_with_amenities = [row['house_id'] for row in results]
+
+
+    query = '''
+        SELECT houses.*, areas.name AS area_name, users.full_name AS owner_name,
+        (
+        SELECT image_url
+        FROM house_images
+        WHERE house_images.house_id = houses.id
+        ORDER BY id ASC
+        LIMIT 1
+        ) AS image_filename
+    FROM houses
+    JOIN areas ON houses.area_id = areas.id
+    JOIN users ON houses.owner_id = users.id
+    WHERE houses.is_available = 1
+    '''
+    params = []
+    if title:
+        query += 'AND houses.title LIKE %s'
+        params.append(f'%{title}%')
+
+    if location:
+        query += 'AND areas.name LIKE %s'
+        params.append(f'%{location}%')
+
+    if min_price:
+        query += 'AND houses.price >= %s'
+        params.append(min_price)
+
+    if max_price:
+        query += 'AND houses.price <= %s'
+        params.append(max_price)
+
+    if amenity_ids:
+        if house_ids_with_amenities:
+            placeholders = ','.join(['%s'] * len(house_ids_with_amenities))
+            query += f' AND houses.id IN ({placeholders})'
+            params.extend(house_ids_with_amenities)
+        else:
+            return render_template('partials/houses_fragment.html', houses=[])
+        
+
+    cursor.execute(query, params)
+    houses = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return render_template('partials/houses_fragment.html', houses=houses)
+
+@app.route('/toggle_bookmark', methods=['POST'])
+@login_required
+def toggle_bookmark():
+    data = request.get_json()
+    house_id = int(data.get('house_id'))
+
+    user_id = session['user_id']
+    #house_id = request.json.get('house_id')
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM bookmarked_houses WHERE user_id = %s AND house_id = %s", (user_id, house_id))
+    bookmark = cursor.fetchone()
+
+    if bookmark:
+        cursor.execute("DELETE FROM bookmarked_houses WHERE user_id = %s AND house_id = %s", (user_id, house_id))
+        conn.commit()
+        result = {"status": "removed"}
+    else:
+        cursor.execute("INSERT INTO bookmarked_houses (user_id, house_id) VALUES(%s, %s)",(user_id, house_id))
+        conn.commit()
+        result = {"status": "added"}
+
+    cursor.close()
+    conn.close()
+    return jsonify(result)
+
+@app.route('/house/<int:house_id>/details')
+@login_required
+def house_details(house_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Get house details + owner info
+    cursor.execute('''
+        SELECT houses.*, 
+               areas.name AS area_name,
+               users.full_name AS owner_name,
+               users.phone_number AS owner_contact,
+               users.is_verified AS owner_verified
+        FROM houses
+        JOIN areas ON houses.area_id = areas.id
+        JOIN users ON houses.owner_id = users.id
+        WHERE houses.id = %s
+    ''', (house_id,))
+    house = cursor.fetchone()
+
+    if not house:
+        return jsonify({'error': 'House not found'}), 404
+
+    # Get all images for this house
+    cursor.execute('''
+        SELECT image_url 
+        FROM house_images
+        WHERE house_id = %s
+        ORDER BY id ASC
+    ''', (house_id,))
+    images = cursor.fetchall()
+    image_urls = [img['image_url'] for img in images]
+
+    cursor.close()
+    conn.close()
+
+    house['images'] = image_urls
+
+    return jsonify(house)
+
+
 @app.route('/owner_dashboard')
 @login_required
 def owner_dashboard():
@@ -248,133 +394,6 @@ def owner_dashboard():
     conn.close()
 
     return render_template('owner_dashboard.html', houses=houses, owner_name=last_name) #is_verified=is_verified)
-
-@app.route('/delete_house/<int:house_id>', methods=['POST'])
-@login_required
-def delete_house(house_id):
-    user_id = session['user_id']
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    cursor.execute('''
-        SELECT id FROM houses
-                   WHERE id =%s AND owner_id = %s
-                   ''',(house_id, user_id))
-    result = cursor.fetchone()
-
-    if not result:
-        cursor.close()
-        conn.close()
-        return "Unauthorized/ House does not exist", 403
-    
-    cursor.execute('SELECT image_url FROM house_images WHERE house_id = %s', (house_id,))
-    image_rows = cursor.fetchall()
-    for row in image_rows:
-        image_path = os.path.join(current_app.root_path, 'static', 'uploads', row['image_url'])
-        if os.path.exists(image_path):
-            try:
-                os.remove(image_path)
-            except Exception as e:
-                print(f"Error deleting file {image_path}: {e}")
-    
-    cursor.execute('DELETE FROM house_images WHERE house_id = %s', (house_id,))
-    cursor.execute('DELETE FROM houses WHERE id = %s', (house_id,))
-    conn.commit()
-
-    cursor.close()
-    conn.close()
-    return "House Deleted", 200
-
-@app.route('/logout', methods=['POST','GET'])
-def logout():
-    session.clear()
-    return redirect(url_for('login'))
-
-#lists available houses for visitors with no accounts
-@app.route('/available_houses')
-def available_houses():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    cursor.execute('''SELECT houses.id, houses.owner_id, users.full_name AS owner_name, houses.title, houses.description, houses.is_available
-                   FROM houses
-                   JOIN users ON houses.owner_id = users.id 
-                   WHERE houses.is_available = 1
-                   ORDER BY houses.created_at DESC
-                   ''')
-    houses= cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return render_template('available_houses.html', houses = houses)
-
-
-@app.route('/partials/houses')
-@login_required
-def list_houses():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    cursor.execute('''
-        SELECT houses.*, areas.name AS area_name, users.full_name AS owner_name,
-                   (
-                   SELECT image_url
-                   FROM house_images
-                   WHERE house_images.house_id = houses.id
-                   ORDER BY id ASC
-                   LIMIT 1)
-                   AS image_filename
-        FROM houses
-        JOIN areas ON houses.area_id = areas.id
-        JOIN users ON houses.owner_id = users.id
-        WHERE houses.is_available = 1
-        ORDER BY houses.created_at DESC
-''')
-    houses = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return render_template('partials/houses_fragment.html', houses=houses)
-
-@app.route('/house/<int:house_id>/details')
-@login_required
-def house_details(house_id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    # Get house details + owner info
-    cursor.execute('''
-        SELECT houses.*, 
-               areas.name AS area_name,
-               users.full_name AS owner_name,
-               users.phone_number AS owner_contact,
-               users.is_verified AS owner_verified
-        FROM houses
-        JOIN areas ON houses.area_id = areas.id
-        JOIN users ON houses.owner_id = users.id
-        WHERE houses.id = %s
-    ''', (house_id,))
-    house = cursor.fetchone()
-
-    if not house:
-        return jsonify({'error': 'House not found'}), 404
-
-    # Get all images for this house
-    cursor.execute('''
-        SELECT image_url 
-        FROM house_images
-        WHERE house_id = %s
-        ORDER BY id ASC
-    ''', (house_id,))
-    images = cursor.fetchall()
-    image_urls = [img['image_url'] for img in images]
-
-    cursor.close()
-    conn.close()
-
-    house['images'] = image_urls
-
-    return jsonify(house)
-
 
 @app.route('/partials/add_house', methods=['GET'])
 @login_required
@@ -493,6 +512,206 @@ def add_house_post():
         cursor.close()
         conn.close()
 
+@app.route('/delete_house/<int:house_id>', methods=['POST'])
+@login_required
+def delete_house(house_id):
+    user_id = session['user_id']
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute('''
+        SELECT id FROM houses
+                   WHERE id =%s AND owner_id = %s
+                   ''',(house_id, user_id))
+    result = cursor.fetchone()
+
+    if not result:
+        cursor.close()
+        conn.close()
+        return "Unauthorized/ House does not exist", 403
+    
+    cursor.execute('SELECT image_url FROM house_images WHERE house_id = %s', (house_id,))
+    image_rows = cursor.fetchall()
+    for row in image_rows:
+        image_path = os.path.join(current_app.root_path, 'static', 'uploads', row['image_url'])
+        if os.path.exists(image_path):
+            try:
+                os.remove(image_path)
+            except Exception as e:
+                print(f"Error deleting file {image_path}: {e}")
+    
+    cursor.execute('DELETE FROM house_images WHERE house_id = %s', (house_id,))
+    cursor.execute('DELETE FROM houses WHERE id = %s', (house_id,))
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+    return "House Deleted", 200
+
+#load the edit form with preloaded saved details
+@app.route('/partials/edit_house/<int:house_id>')
+@login_required
+def edit_house_form(house_id):
+    user_id = session['user_id']
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute('SELECT * FROM houses WHERE id = %s AND owner_id = %s', (house_id, user_id))
+    house = cursor.fetchone()
+    if not house:
+        cursor.close()
+        conn.close()
+        return "Unauthorized", 403
+    
+    cursor.execute('SELECT * FROM areas')
+    areas = cursor.fetchall()
+    cursor.execute('SELECT * FROM amenities')
+    all_amenities = cursor.fetchall()
+    cursor.execute('SELECT amenity_id FROM house_amenities WHERE house_id = %s', (house_id,))
+    house_amenities = [row['amenity_id'] for row in cursor.fetchall()]
+    cursor.execute('SELECT * FROM house_images WHERE house_id = %s', (house_id,))
+    images = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    return render_template('partials/edit_house_form.html', house=house,
+                           areas=areas, 
+                           all_amenities=all_amenities,
+                           house_amenities=house_amenities,
+                           images=images)
+
+
+#delete image route on edit house form
+@app.route('/delete_house_image/<int:image_id>', methods=['POST'])
+@login_required
+def delete_house_image(image_id):
+    user_id = session['user_id']
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    #check ownership
+    cursor.execute('''SELECT hi.image_url FROM house_images hi
+                   JOIN houses h ON hi.house_id = h.id
+                   WHERE hi.id = %s AND h.owner_id = %s''', (image_id, user_id))
+    image = cursor.fetchone()
+
+    if not image:
+        cursor.close()
+        conn.close()
+
+    #delete from DB
+    cursor.execute('DELETE FROM house_images WHERE id = %s', (image_id,))
+    conn.commit()
+
+    #delete from file system
+    image_path = os.path.join('static/uploads', image['image_url'])
+    if os.path.exists(image_path):
+        os.remove(image_path)
+
+    cursor.close()
+    conn.close()
+    return '', 204
+
+#save made changes on edit_house_form
+@app.route('/update_house', methods=['POST'])
+@login_required
+def update_house():
+    user_id = session['user_id']
+    house_id = request.form['house_id']
+    title = request.form['title']
+    price = request.form['price']
+    description = request.form['description']
+    area_id = request.form['area_id']
+    amenities = request.form.getlist('amenities')
+    new_images = request.files.getlist('new_images')
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    #check if the owner exists
+    cursor.execute('SELECT * FROM houses WHERE id = %s AND owner_id = %s', (house_id, user_id))
+    if not cursor.fetchone():
+        cursor.close()
+        conn.close()
+        return "unauhorized", 403
+    
+    #update basic info
+    cursor.execute('''UPDATE houses
+                   SET title = %s, price = %s, description = %s, area_id = %s
+                   WHERE id = %s
+                   ''',
+                   (title, price, description,area_id, house_id))
+    
+    #update amenities
+    cursor.execute('DELETE FROM house_amenities WHERE house_id = %s', (house_id,))
+    for amenity_id in amenities:
+        cursor.execute('INSERT INTO house_amenities (house_id, amenity_id) VALUES(%s, %s)', (house_id, amenity_id))
+
+    #handle new image uploads
+    for image in new_images:
+        if image and image.filename != '':
+            filename = secure_filename(image.filename)
+            image.save(os.path.join('static/uploads', filename))
+            cursor.execute('INSERT INTO house_images (house_id, image_url) VALUES (%s, %s)', (house_id, filename))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return redirect(url_for('owner_dashboard'))
+
+
+
+@app.route('/logout', methods=['POST','GET'])
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
+
+#lists available houses for visitors with no accounts
+@app.route('/available_houses')
+def available_houses():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute('''SELECT houses.id, houses.owner_id, users.full_name AS owner_name, houses.title, houses.description, houses.is_available
+                   FROM houses
+                   JOIN users ON houses.owner_id = users.id 
+                   WHERE houses.is_available = 1
+                   ORDER BY houses.created_at DESC
+                   ''')
+    houses= cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return render_template('available_houses.html', houses = houses)
+
+
+@app.route('/partials/houses')
+@login_required
+def list_houses():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute('''
+        SELECT houses.*, areas.name AS area_name, users.full_name AS owner_name,
+                   (
+                   SELECT image_url
+                   FROM house_images
+                   WHERE house_images.house_id = houses.id
+                   ORDER BY id ASC
+                   LIMIT 1)
+                   AS image_filename
+        FROM houses
+        JOIN areas ON houses.area_id = areas.id
+        JOIN users ON houses.owner_id = users.id
+        WHERE houses.is_available = 1
+        ORDER BY houses.created_at DESC
+''')
+    houses = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return render_template('partials/houses_fragment.html', houses=houses)
 
 @app.route('/admin/verify_owners')
 @login_required
@@ -566,33 +785,6 @@ def bookmark_house(house_id):
     conn.close()
     return redirect(url_for('available_houses'))'''
 
-@app.route('/toggle_bookmark', methods=['POST'])
-@login_required
-def toggle_bookmark():
-    data = request.get_json()
-    house_id = int(data.get('house_id'))
-
-    user_id = session['user_id']
-    #house_id = request.json.get('house_id')
-    
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT * FROM bookmarked_houses WHERE user_id = %s AND house_id = %s", (user_id, house_id))
-    bookmark = cursor.fetchone()
-
-    if bookmark:
-        cursor.execute("DELETE FROM bookmarked_houses WHERE user_id = %s AND house_id = %s", (user_id, house_id))
-        conn.commit()
-        result = {"status": "removed"}
-    else:
-        cursor.execute("INSERT INTO bookmarked_houses (user_id, house_id) VALUES(%s, %s)",(user_id, house_id))
-        conn.commit()
-        result = {"status": "added"}
-
-    cursor.close()
-    conn.close()
-    return jsonify(result)
 
 @app.route('/send_message', methods=['POST'])
 @login_required
@@ -690,82 +882,6 @@ def clear_notification():
     conn.close()
     return jsonify({'success': True})
 
-@app.route('/filter_houses', methods=['POST'])
-@login_required
-def filter_houses():
-    filters = request.get_json()
-    title = filters.get('title', '').strip()
-    location = filters.get('location', '').strip()
-    min_price = filters.get('min_price')
-    max_price = filters.get('max_price')
-    amenity_ids = filters.get('amenities', [])
-    if isinstance(amenity_ids, str):
-        amenity_ids = [int(a.strip()) for a in amenity_ids.split(',') if a.strip().isdigit()]
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    house_ids_with_amenities = []
-    if amenity_ids:
-        placeholders = ','.join(['%s'] * len(amenity_ids))
-        count_required = len(amenity_ids)
-        subquery = f'''
-        SELECT house_id
-        FROM house_amenities
-        WHERE amenity_id IN ({placeholders})
-        GROUP BY house_id
-        HAVING COUNT(DISTINCT amenity_id) = {count_required}
-        '''
-        cursor.execute(subquery, amenity_ids)
-        results = cursor.fetchall()
-        house_ids_with_amenities = [row['house_id'] for row in results]
-
-
-    query = '''
-        SELECT houses.*, areas.name AS area_name, users.full_name AS owner_name,
-        (
-        SELECT image_url
-        FROM house_images
-        WHERE house_images.house_id = houses.id
-        ORDER BY id ASC
-        LIMIT 1
-        ) AS image_filename
-    FROM houses
-    JOIN areas ON houses.area_id = areas.id
-    JOIN users ON houses.owner_id = users.id
-    WHERE houses.is_available = 1
-    '''
-    params = []
-    if title:
-        query += 'AND houses.title LIKE %s'
-        params.append(f'%{title}%')
-
-    if location:
-        query += 'AND areas.name LIKE %s'
-        params.append(f'%{location}%')
-
-    if min_price:
-        query += 'AND houses.price >= %s'
-        params.append(min_price)
-
-    if max_price:
-        query += 'AND houses.price <= %s'
-        params.append(max_price)
-
-    if amenity_ids:
-        if house_ids_with_amenities:
-            placeholders = ','.join(['%s'] * len(house_ids_with_amenities))
-            query += f' AND houses.id IN ({placeholders})'
-            params.extend(house_ids_with_amenities)
-        else:
-            return render_template('partials/houses_fragment.html', houses=[])
-        
-
-    cursor.execute(query, params)
-    houses = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return render_template('partials/houses_fragment.html', houses=houses)
 
 app.before_request 
 def make_Session_permanent():

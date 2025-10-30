@@ -239,3 +239,61 @@
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 1rem;
 }
+ 
+
+
+/*................................................*?/
+/* Slide-in panel map container */
+/* Slide-in panel map container */
+#map-container {
+    display: none;                  /* Hidden until triggered */
+    position: relative;             /* Keeps elements stacked within */
+    width: 100%;
+    height: auto;                   /* Will adjust for both map + street view */
+    margin-top: 1rem;
+    background: #2a2a2d;            /* Match your dark theme */
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
+    z-index: 20;                    /* Keeps it above other .detail-rows */
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.4s ease, transform 0.3s ease;
+}
+
+#map-container.show {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Map and Street View iframes */
+#map-container iframe {
+    width: 100%;
+    height: 220px;
+    border: none;
+    display: block;
+    border-top: 1px solid #333;
+}
+
+/* Optional: subtle shadow between map and next section */
+#street-view-frame {
+    box-shadow: 0 -3px 6px rgba(0,0,0,0.3) inset;
+}
+
+/* Map button styling */
+#view-map-btn {
+    padding: 0.4rem 0.8rem;
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+#view-map-btn:hover {
+    background-color: #1d4ed8;
+    transform: translateY(-1px);
+}
