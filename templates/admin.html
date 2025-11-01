@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Boma</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_dashboard.css') }}">
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>Boma Admin</h2>
+            <button id="close-sidebar" class="close-btn">&times;</button>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="#" class="active">Dashboard</a></li>
+                <li><a href="#">Owners</a></li>
+                <li><a href="#">Tenants</a></li>
+                <li><a href="#">Houses</a></li>
+                <li><a href="#">Reports</a></li>
+                <li><a href="#">Settings</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="topbar">
+            <button id="menu-toggle" class="menu-btn">&#9776;</button>
+            <h1>Admin Dashboard</h1>
+        </header>
+    <!-- ✅ Stat Cards -->
+<section class="content"></section>
+
+    </main>
+
+<script>
+function loadSection(url) {
+    fetch(url)
+        .then(res => {
+            if (!res.ok) {
+                throw new Error(`HTTP error! Status: ${res.status}`);
+            }
+            return res.text();
+        })
+        .then(html => {
+           // console.log("Fetched HTML:", html); //  Debug: see what comes back
+            document.querySelector('.content').innerHTML = html;
+        })
+        .catch(err => {
+            console.error("Failed to load section:", err);
+            document.querySelector('.content').innerHTML = `<p style="color:red;">Failed to load content. Check console.</p>`;
+        });
+}
+document.addEventListener('click', function(e) {
+    if (e.target.id === 'search-btn') {
+        const query = document.getElementById('owner-search').value.trim();
+        loadSection(`/admin/owners?search=${encodeURIComponent(query)}`);
+    }
+});
+
+// Optional: trigger search on Enter key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && document.activeElement.id === 'owner-search') {
+        const query = document.getElementById('owner-search').value.trim();
+        loadSection(`/admin/owners?search=${encodeURIComponent(query)}`);
+    }
+});
+
+
+// Sidebar links
+document.querySelectorAll('.sidebar nav a').forEach(link => {
+    link.addEventListener('click', function(e) {
+        e.preventDefault();
+
+        // Highlight active
+        document.querySelectorAll('.sidebar nav a').forEach(l => l.classList.remove('active'));
+        this.classList.add('active');
+
+        const section = this.textContent.trim().toLowerCase();
+
+        if (section === 'dashboard') loadSection('/admin/dashboard');
+        else if (section === 'owners') loadSection('/admin/owners');
+        else if(section === 'houses') loadSection('/admin/houses');
+    });
+});
+
+// Load dashboard by default
+loadSection('/admin/dashboard');
+document.querySelectorAll('.sidebar nav a').forEach(l => {
+    if (l.textContent.trim().toLowerCase() === 'dashboard') l.classList.add('active');
+});
+//console.log("yeeeee")
+
+// handle approve & disapprove button clicks
+document.addEventListener('click', async function(e) {
+    if(e.target.classList.contains('approve-btn')) {
+        const houseId = e.target.dataset.id;
+        try{
+            const response = await fetch(`/admin/houses/approve/${houseId}`, { method: 'POST'});
+            if (response.ok) {
+                alert('Database updated: House approved', 'success');
+                loadSection('/admin/houses');
+            }else{
+                alert('Failed to approve house ${response.status}', 'error')
+            }
+        }catch(error){
+            alert('connection error:check console for logs');
+            console.error(error)
+        }
+    }
+    if(e.target.classList.contains('disapprove-btn')) {
+        const houseId = e.target.dataset.id;
+        try{
+            const response = await fetch (`/admin/houses/disapprove/${houseId}`, { method: 'POST'});
+            if(response.ok) {
+                alert('Record updated; House disapproved');
+                loadSection('/admin/houses');
+            }else{
+                alert('Failed to update database ${response.status}');
+            }
+        }catch(error) {
+            alert('connection error: check console for logs')
+            console.error(error);
+        }
+    }
+    ///owner approval 
+    if(e.target.classList.contains('btn-approve')) {
+        const ownerId = e.target.dataset.id;
+        try{
+            const response = await fetch(`/admin/owners/approve/${ownerId}`, {
+                method: 'POST'
+            });
+            //const data = await response.json();
+            if(response.ok) {
+                alert('Owner approved');
+                loadSection('/admin/owners');
+            }else{
+                alert(`Failed to update record ${response.status}`);
+            }
+        }catch(error) {
+            alert("connection error: check console for logs")
+            console.error(error);
+        }
+    }
+    //suspend owner account handle
+    if(e.target.classList.contains('btn-suspend')) {
+        const ownerId = e.target.dataset.id;
+        try{
+            const response = await fetch(`/admin/owners/suspend/${ownerId}`,{
+                method: 'POST'
+            });
+            if(response.ok) {
+                alert('Owner account suspended');
+                loadSection('/admin/owners');
+            }else{
+                alert(`Failed to update owner record ${response.status}`);
+            }
+        }catch(error){
+            alert('connection error: check console logs')
+            console.error(error);
+        }
+    }
+    //unsuspend owner account
+    if(e.target.classList.contains('btn-unsuspend')) {
+        const ownerId = e.target.dataset.id;
+        try{
+            const response = await fetch(`/admin/owners/unsuspend/${ownerId}`,{
+                method: 'POST'
+            });
+            if(response.ok) {
+                alert('Owner account unsuspended');
+                loadSection('/admin/owners');
+            }else{
+                alert(`Failed to update owner record ${response.status}`);
+            }
+        }catch(error){
+            alert('connection error: check console logs')
+            console.error(error);
+        }
+    }
+
+    //house details viewing
+    if(e.target.classList.contains('view-btn')) {
+        const houseId = e.target.dataset.id;
+        try{
+            const response =await fetch(`/admin/house/details/${houseId}`);
+            if(response.ok) {
+                const html = await response.text();
+                document.querySelector('.content').innerHTML = html;
+                //alert(`viewing details for house #${houseId}`, 'info');
+            }else{
+                alert(`failed to fetch house details (${response.status})`, 'error');
+            }
+        }catch (error){
+            console.error('err loading house:', error)
+            alert('error loading details', 'error')
+        }
+    }
+}) ;
+
+</script>
+
+
+</body>
+</html>

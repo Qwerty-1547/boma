@@ -1,0 +1,69 @@
+<div class="house-details-container">
+    <!-- Header -->
+    <div class="details-header">
+        <h2>{{ house.title }}</h2>
+        <p><strong>ID:</strong> {{ house.id }}</p>
+        <p><strong>Area:</strong> {{ house.area_name }}</p>
+        <p><strong>Posted on:</strong> {{ house.created_at.strftime('%Y-%m-%d') if house.created_at else 'N/A' }}</p>
+    </div>
+
+    <!-- Images Section -->
+    {% if images %}
+        <div class="images-gallery">
+            {% for image in images %}
+                <img src="{{ url_for('static', filename='uploads/' + image) }}" alt="house image" class="house-image">
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="no-images">No images uploaded for this house.</p>
+    {% endif %}
+
+    <!-- House Information -->
+    <div class="house-info">
+        <h3>House Details</h3>
+        <p><strong>Description:</strong> {{ house.description }}</p>
+        <p><strong>Address:</strong> {{ house.address }}</p>
+        <p><strong>Price:</strong> Ksh {{ "{:,.0f}".format(house.price) }}</p>
+        <p><strong>Status:</strong> 
+            {% if house.is_verified %}
+                <span class="status verified">Verified</span>
+            {% else %}
+                <span class="status unverified">Unverified</span>
+            {% endif %}
+        </p>
+    </div>
+
+    <!-- Amenities -->
+    <div class="house-amenities">
+        <h3>Amenities</h3>
+        {% if amenities %}
+            <ul>
+                {% for amenity in amenities %}
+                    <li>{{ amenity }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No amenities listed for this house.</p>
+        {% endif %}
+    </div>
+
+    <!-- Owner Information -->
+    <div class="owner-details">
+        <h3>Owner Information</h3>
+        <p><strong>Name:</strong> {{ house.owner_name }}</p>
+        <p><strong>Email:</strong> {{ house.owner_email }}</p>
+        <p><strong>Phone:</strong> {{ house.owner_phone }}</p>
+    </div>
+
+    <!-- Coordinates -->
+    <div class="location-info">
+        <h3>Location</h3>
+        <p><strong>Latitude:</strong> {{ house.latitude }}</p>
+        <p><strong>Longitude:</strong> {{ house.longitude }}</p>
+    </div>
+
+    <!-- Back Button -->
+    <div class="details-actions">
+        <button class="back-btn" onclick="loadSection('/admin/houses')">← Back to Houses</button>
+    </div>
+</div>

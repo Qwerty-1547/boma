@@ -100,7 +100,7 @@ def login():
         elif role_id == 2:
             return redirect('/owner_dashboard')
         elif role_id == 3:
-            return redirect('/admin/verify_owners')
+            return redirect('/admin')
         else:
             session.clear()
             flash("UNAUTHORIZED ACCESS")
@@ -244,7 +244,7 @@ def filter_houses():
     FROM houses
     JOIN areas ON houses.area_id = areas.id
     JOIN users ON houses.owner_id = users.id
-    WHERE houses.is_available = 1
+    WHERE houses.is_available = 1 AND houses.is_verified = 1
     '''
     params = []
     if title:
@@ -350,22 +350,24 @@ def house_details(house_id):
 @app.route('/owner_dashboard')
 @login_required
 def owner_dashboard():
+    if session.get('role_id') != 2:
+        return 'Unauthorized', 403
     user_id = session['user_id']
 
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Check if the user is a verified owner
+    # Check if the user is a verified owner and not suspended
     cursor.execute('''
         SELECT is_verified FROM users
-        WHERE id = %s AND role_id = 2
+        WHERE id = %s AND is_suspended = 0
     ''', (user_id,))
     result = cursor.fetchone()
 
     if not result:
         cursor.close()
         conn.close()
-        flash("Access denied: Only verified owners can access this page.", "danger")
+        flash("Your account has been suspended. Contact Administrator for assistance.", "danger")
         return redirect(url_for('dashboard'))  # or 'home'
 
    # is_verified = result[0]
@@ -482,8 +484,8 @@ def add_house_post():
         os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
         # Insert house record
-        cursor.execute('''INSERT INTO houses (owner_id, title, description, price, address, area_id, latitude, longitude)
-                          VALUES (%s, %s, %s, %s, %s, %s, %s, %s)''',
+        cursor.execute('''INSERT INTO houses (owner_id, title, description, price, address, area_id, latitude, longitude, is_verified)
+                          VALUES (%s, %s, %s, %s, %s, %s, %s, %s,0)''',
                        (session['user_id'], title, description, price, address, area_id, latitude, longitude))
         house_id = cursor.lastrowid
 
@@ -705,7 +707,7 @@ def list_houses():
         FROM houses
         JOIN areas ON houses.area_id = areas.id
         JOIN users ON houses.owner_id = users.id
-        WHERE houses.is_available = 1
+        WHERE houses.is_available = 1 AND houses.is_verified = 1
         ORDER BY houses.created_at DESC
 ''')
     houses = cursor.fetchall()
@@ -713,77 +715,255 @@ def list_houses():
     conn.close()
     return render_template('partials/houses_fragment.html', houses=houses)
 
-@app.route('/admin/verify_owners')
+@app.route('/admin')
 @login_required
-def verify_owners():
+def admin():
     if session.get('role_id') != 3:
-        flash("Admins only")
+        flash("WATCH OUT BOYYYY!!!!")
+        return redirect(url_for('dashboard'))
+    return render_template('admin.html')
+
+
+@app.route('/admin/dashboard')
+@login_required
+def admin_dashboard():
+    if session.get('role_id') != 3:
+        flash("Watch out! You trynna SQl inject me boy!")
+        return redirect(url_for('dashboard'))
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute('SELECT COUNT(*) AS total_users FROM users WHERE role_id IN (1, 2)')
+    total_users = cursor.fetchone()['total_users']
+
+    cursor.execute('SELECT COUNT(*) AS total_houses FROM houses')
+    total_houses = cursor.fetchone()['total_houses']
+
+    cursor.execute('''SELECT COUNT(*) AS pending_owners
+                   FROM users 
+                   WHERE role_id = 2 AND is_verified =0
+                   ''')
+    pending_owners = cursor.fetchone()['pending_owners']
+
+    cursor.execute('''SELECT 'owner_registration' AS action, full_name AS user, created_at,
+                   CASE WHEN is_verified = 1 THEN 'Approved' ELSE 'Pending' END AS status
+                   FROM users
+                   WHERE role_id =2
+                   ORDER BY created_at DESC
+                   LIMIT 3
+                   ''')
+    recent_users = cursor.fetchall()
+
+    cursor.execute("""
+                SELECT 'House approval' AS action, users.full_name AS user, houses.created_at,
+                CASE WHEN houses.is_verified = 1 THEN 'Approved' ELSE 'Pending' END AS status
+                FROM houses
+                JOIN users ON users.id = houses.owner_id
+                ORDER BY houses.created_at DESC
+                LIMIT 3
+                """)
+    recent_houses = cursor.fetchall()
+
+    recent_activities = recent_users + recent_houses
+    recent_activities = sorted(recent_activities, key=lambda x: x['created_at'], reverse=True)[:5]
+
+    cursor.close()
+    conn.close()
+    #print(total_users, total_houses)
+
+    return render_template(
+    'partials/admin_dashboard.html',
+    total_users=total_users,
+    total_houses=total_houses,
+    pending_owners=pending_owners,
+    recent_activities=recent_activities
+)
+#display owner details
+@app.route('/admin/owners')
+@login_required
+def admin_owners():
+    if session.get('role_id') != 3:
+        return 'Unauthorized', 403
+    search = request.args.get('search', '').strip()
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    if search:
+        cursor.execute('''SELECT * FROM users WHERE role_id = 2 AND full_name LIKE %s
+                       ''', (f"%{search}%",))
+    else:
+        cursor.execute('''
+        SELECT id, full_name, email, phone_number, is_verified, is_suspended, created_at
+        FROM users
+        WHERE role_id = 2
+        ORDER BY created_at DESC
+    ''')
+    owners = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template('partials/admin_owners.html', owners=owners)
+
+
+    
+#handling owner approval requests route
+@app.route('/admin/owners/approve/<int:owner_id>', methods=['POST'])
+@login_required
+def approve_owner(owner_id):
+    if session.get('role_id') != 3:
+        return 'Unauthorized', 403
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('UPDATE users SET is_verified = 1 WHERE id = %s AND role_id = 2', (owner_id,))
+
+        conn.commit()
+        
+        return jsonify({'message': 'Owner approved'}), 200
+    
+    except Exception as e:
+        print(f"error approving owner: {e}")
+        return jsonify({'error': 'failed to aprove owner'}), 500
+    
+    finally:
+        cursor.close()
+        conn.close()
+#suspending owner aaccouts route'
+@app.route('/admin/owners/suspend/<int:owner_id>', methods=['POST'])
+@login_required
+def suspend_owner(owner_id):
+    if session.get('role_id') != 3:
+        return 'Unauthorized', 403
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('UPDATE users SET is_suspended = 1 WHERE id = %s AND role_id = 2', (owner_id,))
+        conn.commit()
+        return jsonify({'message': 'Account suspended'}), 200
+    except Exception as e:
+        print(f"error updating owner record: {e}")
+        return jsonify({'error': 'failed to update owner record'}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+#unsuspending owner accounts
+@app.route('/admin/owners/unsuspend/<int:owner_id>', methods=['POST'])
+@login_required
+def unsuspend_owner(owner_id):
+    if session.get('role_id') != 3:
+        return 'Unauthorized', 403
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('UPDATE users SET is_suspended = 0 WHERE id = %s AND role_id = 2', (owner_id,))
+        conn.commit()
+        return jsonify({'message': 'Account suspended'}), 200
+    except Exception as e:
+        print(f"error updating owner record: {e}")
+        return jsonify({'error': 'failed to update owner record'}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.route('/admin/houses')
+@login_required
+def admin_houses():
+    if session.get('role_id') != 3:
+        flash("WATCH OOOUT, YOU NOT SUPPOSSED TO BE HERE!!!!")
         return redirect(url_for('dashboard'))
     
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute('''
-SELECT users.id, users.full_name, users.email, users.phone_number, users.area_id, users.created_at
-                   FROM users
-                   WHERE role_id = 2 AND is_verified = 0
+
+    cursor.execute('''SELECT h.id, h.title, h.description, h.address, h.is_verified,
+    h.created_at, h.price, u.full_name AS owner_name, a.name AS area_name
+    FROM houses h
+                   JOIN users u ON u.id = h.owner_id
+                   JOIN areas a ON a.id = h.area_id
+                   ORDER BY h.created_at DESC
                    ''')
-    unverified_owners = cursor.fetchall()
+    houses = cursor.fetchall()
+
     cursor.close()
     conn.close()
-    return render_template('verify_owners.html', owners = unverified_owners)
 
-@app.route('/admin/approve_owner/<int:user_id>', methods = ['POST'])
+    return render_template('partials/admin_houses.html', houses=houses)
+    
+#approving house route
+@app.route('/admin/houses/approve/<int:house_id>', methods=['POST'])
 @login_required
-def approve_owner(user_id):
+def approve_house(house_id):
     if session.get('role_id') != 3:
-        flash("Admins only")
-        return redirect(url_for('/dashboard'))
-    
+        return 'Unauthorized', 403
     conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    cursor.execute("SELECT role_id, is_verified FROM users WHERE id = %s", (user_id,))
-    user = cursor.fetchone()
+    cursor= conn.cursor()
 
-    if not user:
-        flash("user not found")
-    elif user['role_id'] != 2:
-        flash("user not registered as an owner")
-    elif user['is_verified']:
-        flash("user is already verified")
-    else:
-        cursor.execute("UPDATE users SET is_verified = 1 WHERE id = %s", (user_id,))
-        conn.commit()
-        flash("User approved successfully  ")
+    cursor.execute('UPDATE houses SET is_verified = 1 WHERE id = %s', (house_id,))
+    conn.commit()
     cursor.close()
     conn.close()
-    return redirect(url_for('verify_owners'))
+    return 'OK'
 
-
-#old route handling bookmarking and unbookmarking
-'''
-@app.route('/bookmark/<int:house_id>', methods = ['POST'])
+#disapprove a house
+@app.route('/admin/houses/disapprove/<int:house_id>', methods=['POST'])
 @login_required
-def bookmark_house(house_id):
-    user_id = session.get('user_id')
-    if session.get('role_id') != 1:
-        flash("Only logged in tenants can bookmark houses")
-        return redirect(url_for('available_houses'))
+def disapprove_house(house_id):
+    if session.get('role_id') != 3:
+        return 'Unauthorized', 403
+    
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    try:
-        cursor.execute(INSERT INTO bookmarked_houses(user_id, house_id) VALUES(%s,%s), (user_id, house_id))
-                       
-        conn.commit()
-        flash("House bookmarked")
+    cursor.execute('UPDATE houses SET is_verified = 0 WHERE id = %s', (house_id,))
 
-    except pymysql.IntegrityError:
-        flash("House already bookmarked")
-
+    conn.commit()
     cursor.close()
     conn.close()
-    return redirect(url_for('available_houses'))'''
+    return 'OK'
+
+#viewing full house details from the admin side
+@app.route('/admin/house/details/<int:house_id>', methods=['GET'])
+@login_required
+def admin_house_details(house_id):
+    if session.get('role_id') != 3:
+        return 'Unauthorized', 403
+    try:
+        conn =get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('''SELECT h.*, u.full_name AS owner_name, u.email AS owner_email, u.phone_number AS owner_phone,
+                       a.name AS area_name
+                       FROM houses h
+                       JOIN users u ON u.id = h.owner_id
+                       LEFT JOIN areas a ON a.id = h.area_id
+                       WHERE h.id = %s
+                       ''', (house_id,))
+        house = cursor.fetchone()
+        if not house:
+            return 'House not found', 404
+        cursor.execute('SELECT image_url FROM house_images WHERE house_id = %s ORDER BY id ASC ', (house_id,))
+        image_rows = cursor.fetchall()
+        images = [r['image_url'] for r in image_rows] if image_rows else []
+
+        cursor.execute('''SELECT am.id, am.name
+                       FROM house_amenities ha
+                       JOIN amenities am ON am.id = ha.amenity_id
+                       WHERE ha.house_id = %s
+                       ORDER BY am.name ASC
+                       ''', (house_id,))
+        amenity_rows = cursor.fetchall()
+        amenities = [r['name'] for r in amenity_rows] if amenity_rows else []
+        return render_template('partials/admin_house_details.html', house=house, images=images, amenities=amenities)
+    except Exception as e:
+        app.logger.error(f"Error fetching house details for id={house_id}: {e}", exc_info=True)
+        return 'Internal server error', 500
+    finally:
+        cursor.close()
+        conn.close()
 
 
 @app.route('/send_message', methods=['POST'])

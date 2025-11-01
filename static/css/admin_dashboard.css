@@ -1,0 +1,338 @@
+/* === RESET & BASE === */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    min-height: 100vh;
+    background: #f4f6f9;
+    color: #333;
+}
+
+/* === SIDEBAR === */
+.sidebar {
+    width: 250px;
+    background-color: #202a44;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    padding: 1rem;
+    transition: transform 0.3s ease;
+    z-index: 200;
+}
+
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.sidebar h2 {
+    font-size: 1.3rem;
+}
+
+.sidebar nav ul {
+    list-style: none;
+}
+
+.sidebar nav li {
+    margin-bottom: 1rem;
+}
+
+.sidebar nav a {
+    text-decoration: none;
+    color: #cfd8e3;
+    font-weight: 500;
+    display: block;
+    padding: 0.5rem 0.8rem;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+
+.sidebar nav a.active,
+.sidebar nav a:hover {
+    background-color: #2e3a5c;
+    color: #fff;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: none;
+}
+
+/* === MAIN CONTENT === */
+.main-content {
+    margin-left: 250px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.topbar {
+    background: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 150;
+}
+
+.menu-btn {
+    font-size: 1.5rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: none;
+}
+
+.content {
+    flex: 1;
+    padding: 1.5rem;
+}
+
+/* === STAT CARDS === */
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    position: sticky;
+    top: 70px; /* stays below the topbar */
+    background: #f4f6f9;
+    padding: 1rem 0;
+    z-index: 100;
+    margin-bottom: 1rem;
+}
+
+.stat-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.stat-card h3 {
+    font-size: 1rem;
+    color: #555;
+}
+
+.stat-card .stat-number {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #202a44;
+    margin-top: 0.5rem;
+}
+
+/* Pending highlight */
+.stat-card.pending {
+    border-left: 5px solid #f1c40f;
+    background: #fff8e1;
+}
+
+/* === TABLE SECTION === */
+.table-container {
+    background: #fff;
+    margin-top: 1rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    overflow: hidden;
+    position: relative;
+}
+
+.table-container h2 {
+    padding: 1rem;
+    background: #202a44;
+    color: #fff;
+    font-size: 1.1rem;
+    position: sticky;
+    z-index: 6;
+}
+
+.table-container table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table-container th,
+.table-container td {
+    text-align: left;
+    padding: 0.8rem 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+/* ✅ Keep header visible while scrolling but not pushed too far down */
+.table-container th {
+    background: #f7f9fc;
+    font-weight: 600;
+    color: #555;
+    position: sticky;
+     /* 70px = topbar, ~50px for h2 height */
+    z-index: 5;
+}
+
+/* Status badge styles */
+/* === STATUS BADGES (Improved) === */
+/* === STATUS BADGES (Improved Visuals) === */
+.status {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: inline-block;
+    text-align: center;
+    min-width: 90px;
+}
+
+/* Pending - bright yellow/orange tone */
+.status.pending {
+    background-color: #fff3cd; /* light yellow background */
+    color: #856404;            /* dark gold text */
+    border: 1px solid #ffeeba;
+}
+
+/* Approved - green tone */
+.status.approved {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+/* Default fallback */
+.status {
+    background-color: #e2e3e5;
+    color: #383d41;
+    border: 1px solid #d6d8db;
+}
+/*search bar*/
+.search-bar {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+#owner-search {
+    flex: 1;
+    padding: 6px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+#search-btn {
+    margin-left: 8px;
+    padding: 6px 12px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#search-btn:hover {
+    background-color: #0056b3;
+}
+
+
+/* Admin House Details */
+.house-details-container {
+    padding: 18px 22px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.details-header h2 {
+    margin-bottom: 4px;
+    font-size: 1.3rem;
+    color: #222;
+}
+
+.images-gallery {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px 0 18px;
+}
+
+.house-image {
+    width: 320px;
+    height: 320px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+}
+
+.house-info, .owner-details, .house-amenities, .location-info {
+    margin-bottom: 14px;
+    line-height: 1.5;
+}
+
+.status.verified {
+    color: #044b07;
+    font-weight: 600;
+    background-color: #90d894;
+}
+
+.status.unverified {
+    color: #c62828;
+    font-weight: 600;
+    background-color: #e9d69d;
+}
+
+.back-btn {
+    background: #333;
+    color: #fff;
+    padding: 8px 14px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.back-btn:hover {
+    background: #444;
+}
+
+
+/* === RESPONSIVENESS === */
+@media (max-width: 768px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+    .sidebar.show {
+        transform: translateX(0);
+    }
+    .close-btn {
+        display: block;
+    }
+    .menu-btn {
+        display: block;
+    }
+    .main-content {
+        margin-left: 0;
+    }
+}

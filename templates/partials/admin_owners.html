@@ -1,0 +1,56 @@
+<div class="table-container">
+    <div class="search-bar">
+        <input type="text" id="owner-search" placeholder="Search owner by name...."/>
+        <button id="search-btn">Search</button>
+    </div>
+    <h2>All Owners</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Joined</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for owner in owners %}
+            <tr>
+                <td>{{ owner.full_name }}</td>
+                <td>{{ owner.email }}</td>
+                <td>{{ owner.phone_number }}</td>
+                <td>{{ owner.created_at.strftime('%Y-%m-%d') if owner.created_at else 'N/A' }}</td>
+                <td>
+                    {% if owner.is_verified %}
+                        {%if owner.is_suspended %}
+                        <span class="status pending">Suspended</span>
+                        <button class="btn-unsuspend" data-id="{{ owner.id }}">Unsuspend</button>
+                        {% else %}
+                        <span class="status approved">Verified</span>
+                        <button class="btn-suspend" data-id="{{ owner.id }}">Suspend</button>
+                        {% endif %}
+                    {% else %}
+                        <span class="status pending">Pending</span>
+                        <button class="btn-approve" data-id="{{ owner.id }}">Approve</button>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if not owner.is_verified %}
+                        
+                        <button class="btn-reject" data-id="{{ owner.id }}">Reject</button>
+                    {% else %}
+                       <!-- <button class="btn-view" data-id="{{ owner.id }}">View Houses</button>-->
+                        
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" style="text-align:center;">No owners found</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

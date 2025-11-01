@@ -1,0 +1,45 @@
+<div class="table-container">
+    <h2>Houses</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Owner</th>
+                <th>Location</th>
+                <th>Monthly Rent</th>
+                <th>Approval Status</th>
+                <th>Created On</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for house in houses %}
+            <tr>
+                <td>{{ house.id }}</td>
+                <td>{{ house.title }}</td>
+                <td>{{ house.owner_name }}</td>
+                <td>{{ house.address }}</td>
+                <td>{{ house.price }}</td>
+                <td>
+                    {% if house.is_verified == 1 %}
+                        <span class="status approved">Approved</span>
+                        <button class="disapprove-btn" data-id="{{ house.id }}">Suspend</button>
+                    {% else %}
+                        <span class="status pending">Pending</span>
+                        <button class="approve-btn" data-id="{{ house.id }}">Approve</button>
+                    {% endif %}
+                </td>
+                <td>{{ house.created_at.strftime('%Y-%m-%d') }}</td>
+                <td>
+                        <button class="view-btn" data-id="{{ house.id }}">View Details</button>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="8" style="text-align:center;">No houses available</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

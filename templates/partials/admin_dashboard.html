@@ -1,0 +1,53 @@
+
+    <!-- ✅ Stat Cards -->
+    <div class="stats-container">
+        <div class="stat-card">
+            <h3>Total Users</h3>
+            <p class="stat-number">{{ total_users }}</p>
+        </div>
+        <div class="stat-card">
+            <h3>Total Houses</h3>
+            <p class="stat-number">{{ total_houses }}</p>
+        </div>
+        <div class="stat-card stat-card pending">
+            <h3>Pending Owner Approvals</h3>
+            <p class="stat-number">{{ pending_owners }}</p>
+        </div>
+    </div>
+
+    <!-- ✅ Recent Activities -->
+    <div class="table-container">
+        <h2>Recent Activities</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Action</th>
+                    <th>User</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for activity in recent_activities %}
+                <tr>
+                    <td>{{ activity.action }}</td>
+                    <td>{{ activity.user }}</td>
+                    <td>{{ activity.created_at.strftime('%Y-%m-%d') if activity.created_at else 'N/A' }}</td>
+                    <td>
+                        {% if activity.status == 'Pending' %}
+                            <span class="status pending">{{ activity.status }}</span>
+                        {% elif activity.status == 'Approved' %}
+                            <span class="status approved">{{ activity.status }}</span>
+                        {% else %}
+                            <span class="status">{{ activity.status }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" style="text-align:center;">No recent activity available</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
