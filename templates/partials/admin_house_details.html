@@ -26,7 +26,11 @@
         <p><strong>Price:</strong> Ksh {{ "{:,.0f}".format(house.price) }}</p>
         <p><strong>Status:</strong> 
             {% if house.is_verified %}
-                <span class="status verified">Verified</span>
+                {%if house.is_suspended %}
+                    <span class="status unverified">Flagged</span>
+                {% else %}
+                    <span class="status verified">Verified</span>
+                {% endif %}
             {% else %}
                 <span class="status unverified">Unverified</span>
             {% endif %}

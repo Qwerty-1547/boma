@@ -880,7 +880,7 @@ def admin_houses():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute('''SELECT h.id, h.title, h.description, h.address, h.is_verified,
+    cursor.execute('''SELECT h.id, h.title, h.description, h.address, h.is_verified, h.is_suspended,
     h.created_at, h.price, u.full_name AS owner_name, a.name AS area_name
     FROM houses h
                    JOIN users u ON u.id = h.owner_id
@@ -909,17 +909,33 @@ def approve_house(house_id):
     conn.close()
     return 'OK'
 
-#disapprove a house
-@app.route('/admin/houses/disapprove/<int:house_id>', methods=['POST'])
+#Flag a house
+@app.route('/admin/houses/flag/<int:house_id>', methods=['POST'])
 @login_required
-def disapprove_house(house_id):
+def flag_house(house_id):
     if session.get('role_id') != 3:
         return 'Unauthorized', 403
     
     conn = get_db_connection()
     cursor = conn.cursor()
+    print("route hit")
+    cursor.execute('UPDATE houses SET is_suspended = 1 WHERE id = %s', (house_id,))
 
-    cursor.execute('UPDATE houses SET is_verified = 0 WHERE id = %s', (house_id,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return 'OK'
+#unflag
+@app.route('/admin/houses/unflag/<int:house_id>', methods=['POST'])
+@login_required
+def unflag_house(house_id):
+    if session.get('role_id') != 3:
+        return 'Unauthorized', 403
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    print("route hit")
+    cursor.execute('UPDATE houses SET is_suspended = 0 WHERE id = %s', (house_id,))
 
     conn.commit()
     cursor.close()
@@ -965,6 +981,116 @@ def admin_house_details(house_id):
         cursor.close()
         conn.close()
 
+#filtering houses
+@app.route('/admin/houses/filter')
+@login_required
+def admin_filter_houses():
+    # Only admins (role_id = 3) can access
+    if session.get('role_id') != 3:
+        return 'Unauthorized', 403
+
+    # Get filter parameters from query string
+    title = request.args.get('title')      # House title
+    owner = request.args.get('owner')      # Owner name (partial)
+    area = request.args.get('area')        # Area/location
+    status = request.args.get('status')    # Approval status: verified/pending/suspended
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Base query
+        query = """
+            SELECT h.id, h.title, h.description, h.address, h.is_verified, h.is_suspended,
+                   h.created_at, h.price, u.full_name AS owner_name, a.name AS area_name
+            FROM houses h
+            JOIN users u ON u.id = h.owner_id
+            JOIN areas a ON a.id = h.area_id
+            WHERE 1=1
+        """
+        params = []  # Will hold query parameters to prevent SQL injection
+
+        # Apply filters if provided
+        if title:
+            query += " AND h.title = %s"
+            params.append(title)
+
+        if owner:
+            query += " AND u.full_name LIKE %s"
+            params.append(f"%{owner}%")  # Partial match using LIKE
+
+        if area:
+            query += " AND a.name = %s"
+            params.append(area)
+
+        if status:
+            # Translate frontend status to DB conditions
+            if status == 'verified':
+                query += " AND h.is_verified = 1 AND h.is_suspended = 0"
+            elif status == 'pending':
+                query += " AND h.is_verified = 0 AND h.is_suspended = 0"
+            elif status == 'suspended':
+                query += " AND h.is_suspended = 1"
+
+        # Order newest first
+        query += " ORDER BY h.created_at DESC"
+
+        # Execute query safely with parameters
+        cursor.execute(query, tuple(params))
+        houses = cursor.fetchall()
+        #dropdown data
+        cursor.execute('SELECT name FROM areas ORDER BY name ASC')
+        area_rows = cursor.fetchall()
+        areas = [row['name'] for row in area_rows]
+
+        cursor.execute("SHOW COLUMNS FROM houses LIKE 'title'")
+        enum_data = cursor.fetchone()['Type']
+        titles = [v.strip("'") for v in enum_data.replace("enum(","").replace(")", "").split(",")]
+
+        return render_template('partials/admin_houses.html', houses=houses, areas=areas, titles=titles)
+
+    except Exception as e:
+        app.logger.error(f"Error filtering houses: {e}", exc_info=True)
+        return "Internal server error", 500
+
+    finally:
+        cursor.close()
+        conn.close()
+# autocomplte suggestions when typing owner name
+@app.route('/admin/owners/search')
+@login_required
+def search_owners():
+    if session.get('role_id') != 3:
+        return 'Unauthorized', 403
+
+    query_param = request.args.get('query', '').strip()
+    if not query_param:
+        return jsonify([])  # empty input → return empty list
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT full_name FROM users WHERE role_id = 2 AND full_name LIKE %s ORDER BY full_name ASC LIMIT 10",
+            (f"%{query_param}%",)
+        )
+        results = [row['full_name'] for row in cursor.fetchall()]
+        return jsonify(results)
+
+    except Exception as e:
+        app.logger.error(f"Error searching owners: {e}", exc_info=True)
+        return jsonify([]), 500
+
+    finally:
+        cursor.close()
+        conn.close()
+#load tenant details for the admin section
+@app.route('/admin/tenants')
+@login_required
+def tenant_details():
+    if session.get('role_id') != 3:
+        return 'Unauthorized', 403
+    
 
 @app.route('/send_message', methods=['POST'])
 @login_required

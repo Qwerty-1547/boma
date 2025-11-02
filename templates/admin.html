@@ -35,33 +35,40 @@
 <section class="content"></section>
 
     </main>
-
 <script>
+// === Section Loader (Reusable) ===
 function loadSection(url) {
     fetch(url)
         .then(res => {
-            if (!res.ok) {
-                throw new Error(`HTTP error! Status: ${res.status}`);
-            }
+            if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
             return res.text();
         })
         .then(html => {
-           // console.log("Fetched HTML:", html); //  Debug: see what comes back
             document.querySelector('.content').innerHTML = html;
+
+            // Detect which section is being loaded and trigger an event
+            if (url.includes('/houses')) {
+                document.dispatchEvent(new CustomEvent('sectionLoaded', { detail: 'houses' }));
+            } else if (url.includes('/owners')) {
+                document.dispatchEvent(new CustomEvent('sectionLoaded', { detail: 'owners' }));
+            } else if (url.includes('/dashboard')) {
+                document.dispatchEvent(new CustomEvent('sectionLoaded', { detail: 'dashboard' }));
+            }
         })
         .catch(err => {
             console.error("Failed to load section:", err);
-            document.querySelector('.content').innerHTML = `<p style="color:red;">Failed to load content. Check console.</p>`;
+            document.querySelector('.content').innerHTML =
+                `<p style="color:red;">Failed to load content. Check console.</p>`;
         });
 }
+
+// === Search bar in Owners Page ===
 document.addEventListener('click', function(e) {
     if (e.target.id === 'search-btn') {
         const query = document.getElementById('owner-search').value.trim();
         loadSection(`/admin/owners?search=${encodeURIComponent(query)}`);
     }
 });
-
-// Optional: trigger search on Enter key
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Enter' && document.activeElement.id === 'owner-search') {
         const query = document.getElementById('owner-search').value.trim();
@@ -69,21 +76,17 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-
-// Sidebar links
+// === Sidebar Navigation ===
 document.querySelectorAll('.sidebar nav a').forEach(link => {
     link.addEventListener('click', function(e) {
         e.preventDefault();
-
-        // Highlight active
         document.querySelectorAll('.sidebar nav a').forEach(l => l.classList.remove('active'));
         this.classList.add('active');
 
         const section = this.textContent.trim().toLowerCase();
-
         if (section === 'dashboard') loadSection('/admin/dashboard');
         else if (section === 'owners') loadSection('/admin/owners');
-        else if(section === 'houses') loadSection('/admin/houses');
+        else if (section === 'houses') loadSection('/admin/houses');
     });
 });
 
@@ -92,115 +95,204 @@ loadSection('/admin/dashboard');
 document.querySelectorAll('.sidebar nav a').forEach(l => {
     if (l.textContent.trim().toLowerCase() === 'dashboard') l.classList.add('active');
 });
-//console.log("yeeeee")
 
-// handle approve & disapprove button clicks
+// === Approve/Disapprove Buttons ===
 document.addEventListener('click', async function(e) {
-    if(e.target.classList.contains('approve-btn')) {
-        const houseId = e.target.dataset.id;
-        try{
-            const response = await fetch(`/admin/houses/approve/${houseId}`, { method: 'POST'});
+    const target = e.target;
+
+    // House Approve
+    if (target.classList.contains('approve-btn')) {
+        const houseId = target.dataset.id;
+        try {
+            const response = await fetch(`/admin/houses/approve/${houseId}`, { method: 'POST' });
             if (response.ok) {
-                alert('Database updated: House approved', 'success');
+                alert('House approved successfully');
                 loadSection('/admin/houses');
-            }else{
-                alert('Failed to approve house ${response.status}', 'error')
-            }
-        }catch(error){
-            alert('connection error:check console for logs');
-            console.error(error)
-        }
-    }
-    if(e.target.classList.contains('disapprove-btn')) {
-        const houseId = e.target.dataset.id;
-        try{
-            const response = await fetch (`/admin/houses/disapprove/${houseId}`, { method: 'POST'});
-            if(response.ok) {
-                alert('Record updated; House disapproved');
-                loadSection('/admin/houses');
-            }else{
-                alert('Failed to update database ${response.status}');
-            }
-        }catch(error) {
-            alert('connection error: check console for logs')
+            } else alert(`Failed to approve house (${response.status})`);
+        } catch (error) {
             console.error(error);
-        }
-    }
-    ///owner approval 
-    if(e.target.classList.contains('btn-approve')) {
-        const ownerId = e.target.dataset.id;
-        try{
-            const response = await fetch(`/admin/owners/approve/${ownerId}`, {
-                method: 'POST'
-            });
-            //const data = await response.json();
-            if(response.ok) {
-                alert('Owner approved');
-                loadSection('/admin/owners');
-            }else{
-                alert(`Failed to update record ${response.status}`);
-            }
-        }catch(error) {
-            alert("connection error: check console for logs")
-            console.error(error);
-        }
-    }
-    //suspend owner account handle
-    if(e.target.classList.contains('btn-suspend')) {
-        const ownerId = e.target.dataset.id;
-        try{
-            const response = await fetch(`/admin/owners/suspend/${ownerId}`,{
-                method: 'POST'
-            });
-            if(response.ok) {
-                alert('Owner account suspended');
-                loadSection('/admin/owners');
-            }else{
-                alert(`Failed to update owner record ${response.status}`);
-            }
-        }catch(error){
-            alert('connection error: check console logs')
-            console.error(error);
-        }
-    }
-    //unsuspend owner account
-    if(e.target.classList.contains('btn-unsuspend')) {
-        const ownerId = e.target.dataset.id;
-        try{
-            const response = await fetch(`/admin/owners/unsuspend/${ownerId}`,{
-                method: 'POST'
-            });
-            if(response.ok) {
-                alert('Owner account unsuspended');
-                loadSection('/admin/owners');
-            }else{
-                alert(`Failed to update owner record ${response.status}`);
-            }
-        }catch(error){
-            alert('connection error: check console logs')
-            console.error(error);
+            alert('Connection error: check console logs');
         }
     }
 
-    //house details viewing
-    if(e.target.classList.contains('view-btn')) {
-        const houseId = e.target.dataset.id;
-        try{
-            const response =await fetch(`/admin/house/details/${houseId}`);
-            if(response.ok) {
+    // flag house route
+    if (target.classList.contains('flag-btn')) {
+        const houseId = target.dataset.id;
+        try {
+            const response = await fetch(`/admin/houses/flag/${houseId}`, { method: 'POST' });
+            if (response.ok) {
+                alert('House flagged');
+                loadSection('/admin/houses');
+            } else alert(`Failed to flag house (${response.status})`);
+        } catch (error) {
+            console.error(error);
+            alert('Connection error: check console logs');
+        }
+    }
+    if (target.classList.contains('btn-unflag')) {
+        const houseId = target.dataset.id;
+        try {
+            const response = await fetch(`/admin/houses/unflag/${houseId}`, { method: 'POST' });
+            if (response.ok) {
+                alert('House Restored');
+                loadSection('/admin/houses');
+            } else alert(`Failed to restore house (${response.status})`);
+        } catch (error) {
+            console.error(error);
+            alert('Connection error: check console logs');
+        }
+    }
+    // Owner Approve
+    if (target.classList.contains('btn-approve')) {
+        const ownerId = target.dataset.id;
+        try {
+            const response = await fetch(`/admin/owners/approve/${ownerId}`, { method: 'POST' });
+            if (response.ok) {
+                alert('Owner approved successfully');
+                loadSection('/admin/owners');
+            } else alert(`Failed to approve owner (${response.status})`);
+        } catch (error) {
+            console.error(error);
+            alert('Connection error: check console logs');
+        }
+    }
+
+    // Suspend Owner
+    if (target.classList.contains('btn-suspend')) {
+        const ownerId = target.dataset.id;
+        try {
+            const response = await fetch(`/admin/owners/suspend/${ownerId}`, { method: 'POST' });
+            if (response.ok) {
+                alert('Owner suspended');
+                loadSection('/admin/owners');
+            } else alert(`Failed to suspend owner (${response.status})`);
+        } catch (error) {
+            console.error(error);
+            alert('Connection error: check console logs');
+        }
+    }
+
+    // Unsuspend Owner
+    if (target.classList.contains('btn-unsuspend')) {
+        const ownerId = target.dataset.id;
+        try {
+            const response = await fetch(`/admin/owners/unsuspend/${ownerId}`, { method: 'POST' });
+            if (response.ok) {
+                alert('Owner unsuspended');
+                loadSection('/admin/owners');
+            } else alert(`Failed to unsuspend owner (${response.status})`);
+        } catch (error) {
+            console.error(error);
+            alert('Connection error: check console logs');
+        }
+    }
+
+    // View House Details
+    if (target.classList.contains('view-btn')) {
+        const houseId = target.dataset.id;
+        try {
+            const response = await fetch(`/admin/house/details/${houseId}`);
+            if (response.ok) {
                 const html = await response.text();
                 document.querySelector('.content').innerHTML = html;
-                //alert(`viewing details for house #${houseId}`, 'info');
-            }else{
-                alert(`failed to fetch house details (${response.status})`, 'error');
-            }
-        }catch (error){
-            console.error('err loading house:', error)
-            alert('error loading details', 'error')
+            } else alert(`Failed to fetch house details (${response.status})`);
+        } catch (error) {
+            console.error('Error loading house:', error);
+            alert('Error loading details');
         }
     }
-}) ;
+});
 
+// === Houses Filter + Owner Autocomplete (Loaded dynamically) ===
+function attachHouseFilterHandlers() {
+    const ownerInput = document.getElementById('filter-owner');
+    const applyBtn = document.getElementById('apply-filters');
+    if (!ownerInput || !applyBtn) return; // Elements not yet in DOM
+
+    let timeout = null;
+
+    // --- Owner Autocomplete ---
+    ownerInput.addEventListener('input', function() {
+        clearTimeout(timeout);
+        const query = ownerInput.value.trim();
+        if (!query) return;
+
+        timeout = setTimeout(async () => {
+            try {
+                const response = await fetch(`/admin/owners/search?query=${encodeURIComponent(query)}`);
+                if (response.ok) {
+                    const names = await response.json();
+                    showOwnerSuggestions(names);
+                }
+            } catch (err) {
+                console.error('Owner autocomplete error:', err);
+            }
+        }, 300);
+    });
+
+    function showOwnerSuggestions(names) {
+        let dropdown = document.getElementById('owner-suggestions');
+        if (!dropdown) {
+            dropdown = document.createElement('div');
+            dropdown.id = 'owner-suggestions';
+            dropdown.style.position = 'absolute';
+            dropdown.style.background = '#fff';
+            dropdown.style.border = '1px solid #ccc';
+            dropdown.style.borderRadius = '5px';
+            dropdown.style.boxShadow = '0 2px 6px rgba(0,0,0,0.15)';
+            dropdown.style.zIndex = '1000';
+            dropdown.style.maxHeight = '150px';
+            dropdown.style.overflowY = 'auto';
+            ownerInput.parentNode.style.position = 'relative';
+            ownerInput.parentNode.appendChild(dropdown);
+        }
+        dropdown.innerHTML = '';
+        names.forEach(name => {
+            const item = document.createElement('div');
+            item.textContent = name;
+            item.style.padding = '6px';
+            item.style.cursor = 'pointer';
+            item.addEventListener('click', () => {
+                ownerInput.value = name;
+                dropdown.innerHTML = '';
+            });
+            item.addEventListener('mouseover', () => item.style.background = '#f0f0f0');
+            item.addEventListener('mouseout', () => item.style.background = '#fff');
+            dropdown.appendChild(item);
+        });
+        if (names.length === 0) dropdown.innerHTML = '';
+    }
+
+    // --- Apply Filters ---
+    applyBtn.addEventListener('click', () => {
+        const title = document.getElementById('filter-title').value;
+        const owner = document.getElementById('filter-owner').value.trim();
+        const area = document.getElementById('filter-area').value;
+        const status = document.getElementById('filter-status').value;
+
+        const params = new URLSearchParams();
+        if (title) params.append('title', title);
+        if (owner) params.append('owner', owner);
+        if (area) params.append('area', area);
+        if (status) params.append('status', status);
+
+        const url = `/admin/houses/filter?${params.toString()}`;
+        loadSection(url);
+    });
+
+    // Hide dropdown when clicked outside
+    document.addEventListener('click', function(e) {
+        if (!ownerInput.contains(e.target)) {
+            const dropdown = document.getElementById('owner-suggestions');
+            if (dropdown) dropdown.innerHTML = '';
+        }
+    });
+}
+
+// === Attach filter logic when houses section loads ===
+document.addEventListener('sectionLoaded', function(e) {
+    if (e.detail === 'houses') attachHouseFilterHandlers();
+});
 </script>
 
 

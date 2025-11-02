@@ -1,4 +1,42 @@
 <div class="table-container">
+<!-- === Houses Filter/Search Bar === -->
+<div class="filter-bar">
+
+    <!-- House Title Dropdown -->
+    <label for="filter-title">House Type:</label>
+    <select id="filter-title">
+        <option value="">All</option>
+        {% for title in titles %}
+            <option value="{{ title }}">{{ title }}</option>
+        {% endfor %}
+    </select>
+
+    <!-- Owner Name Autocomplete -->
+    <label for="filter-owner">Owner Name:</label>
+    <input type="text" id="filter-owner" placeholder="Type owner name">
+
+    <!-- Area Dropdown with Search -->
+    <label for="filter-area">Location/Area:</label>
+    <select id="filter-area">
+        <option value="">All</option>
+        {% for area in areas %}
+            <option value="{{ area }}">{{ area }}</option>
+        {% endfor %}
+    </select>
+
+    <!-- Approval Status Dropdown -->
+    <label for="filter-status">Approval Status:</label>
+    <select id="filter-status">
+        <option value="">All</option>
+        <option value="verified">Verified</option>
+        <option value="pending">Pending</option>
+        <option value="suspended">Flagged</option>
+    </select>
+
+    <!-- Apply Filter Button -->
+    <button id="apply-filters">Apply Filter</button>
+</div>
+
     <h2>Houses</h2>
     <table>
         <thead>
@@ -19,12 +57,17 @@
                 <td>{{ house.id }}</td>
                 <td>{{ house.title }}</td>
                 <td>{{ house.owner_name }}</td>
-                <td>{{ house.address }}</td>
+                <td>{{ house.area_name }}</td>
                 <td>{{ house.price }}</td>
                 <td>
                     {% if house.is_verified == 1 %}
-                        <span class="status approved">Approved</span>
-                        <button class="disapprove-btn" data-id="{{ house.id }}">Suspend</button>
+                        {% if house.is_suspended == 1 %}
+                            <span class="status pending">Flagged</span>
+                            <button class="btn-unflag" data-id="{{ house.id }}">Restore</button>
+                        {% else %}
+                            <span class="status approved">Approved</span>                     
+                            <button class="flag-btn" data-id="{{ house.id }}">Flag</button>
+                        {% endif %}
                     {% else %}
                         <span class="status pending">Pending</span>
                         <button class="approve-btn" data-id="{{ house.id }}">Approve</button>

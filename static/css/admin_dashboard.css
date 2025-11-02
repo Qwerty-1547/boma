@@ -317,6 +317,68 @@ body {
     background: #444;
 }
 
+/* === Minimal Filter/Search Bar === */
+.filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    padding: 10px 12px;
+    background: #f7f9fc;
+    border-bottom: 1px solid #ddd;
+    border-radius: 6px;
+    margin-bottom: 12px;
+}
+
+.filter-bar label {
+    font-weight: 500;
+    color: #555;
+    font-size: 0.9rem;
+}
+
+.filter-bar select,
+.filter-bar input {
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    min-width: 120px;
+}
+
+.filter-bar button {
+    padding: 6px 14px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.filter-bar button:hover {
+    background-color: #0056b3;
+}
+
+/* === Responsive Adjustments === */
+@media (max-width: 768px) {
+    .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+    }
+
+    .filter-bar select,
+    .filter-bar input,
+    .filter-bar button {
+        width: 100%;
+        min-width: unset;
+    }
+
+    .filter-bar label {
+        margin-bottom: 2px;
+    }
+}
+
 
 /* === RESPONSIVENESS === */
 @media (max-width: 768px) {
