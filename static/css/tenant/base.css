@@ -1,0 +1,66 @@
+/* base.css — global resets, variables and small utilities */
+
+/* Theme variables (light grey theme) */
+:root{
+  --bg: #f3f4f6;
+  --card: #ffffff;
+  --muted: #6b7280;
+  --text: #111827;
+  --accent: #2563eb; /* soft blue */
+  --accent-600: #1e40af;
+  --danger: #dc2626;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --shadow-sm: 0 2px 6px rgba(16,24,40,0.06);
+  --shadow-md: 0 6px 20px rgba(16,24,40,0.08);
+  --transition: 0.22s ease;
+  --max-width: 100%;
+  --gap: 1rem;
+  --panel-width: 620px;
+}
+
+/* Reset */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family: "Inter", "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background:var(--bg);
+  font-size: 18px;
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  line-height:1.45;
+}
+
+/* Utility */
+.hidden{display:none!important}
+.text-center{text-align:center}
+.container{max-width:var(--max-width);margin:0 auto;padding:0 1rem}
+
+/* Buttons */
+.btn{cursor:pointer;display:inline-flex;align-items:center;gap:.5rem;padding:.5rem .9rem;border-radius:8px;font-weight:600;transition:all var(--transition);border:1px solid transparent}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.btn-submit{background:var(--accent);color:#fff}
+.btn-submit:hover{background:var(--accent-600)}
+.btn-ghost{background:transparent;border:1px solid #e6e9ef;color:var(--text)}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-outline{background:transparent;border:1px solid #d1d5db;color:var(--text)}
+
+/* Inputs & selects (consistent look for filters) */
+input[type="text"], input[type="number"], select, textarea{
+  padding:.5rem .65rem;border-radius:8px;border:1px solid #e6e9ef;background:#fff;color:var(--text);font:inherit;
+}
+input:focus,select:focus,textarea:focus{outline:none;box-shadow:0 0 0 4px rgba(37,99,235,0.08);border-color:var(--accent-600);}
+
+/* Small helpers */
+.k-muted{color:var(--muted);font-size:.95rem}
+.body-lock{overflow:hidden}
+
+/* Toast (basic placement) */
+#toast-container{position:fixed;right:18px;bottom:18px;z-index:120000;display:flex;flex-direction:column;gap:.6rem}
+.toast{padding:.6rem .9rem;border-radius:10px;box-shadow:var(--shadow-sm);font-weight:600}
+.toast.success{background:#ecfdf5;color:#065f46;border:1px solid #bbf7d0}
+.toast.error{background:#fff5f5;color:#7f1d1d;border:1px solid #fecaca}
+
+/* small responsive helpers */
+@media (max-width:600px){ .container{padding:0 .6rem} }

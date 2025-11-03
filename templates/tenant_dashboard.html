@@ -2,103 +2,104 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tenant Dashboard</title>
-    
+
+    <!-- Scripts -->
     <script src="{{ url_for('static', filename='js/toggle_bookmark.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/inbox.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/section_loader.js') }}" defer></script>
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/showHouseDetail.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/send_message.js') }}">   </script>
+    <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/showHouseDetail.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/send_message.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/filters.js') }}" defer></script>
-    <script src="{{ url_for('static', filename='js/mapHandler.js') }}"></script>
-    <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        loadSection('houses');
-    });
-</script>
-    <!---->
+    <script src="{{ url_for('static', filename='js/mapHandler.js') }}" defer></script>
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/btns.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/tenant_dashboard.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/inbox.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/houses.css') }}">
-<!--    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">  -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSection('houses');
+        });
+    </script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tenant/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tenant/layout.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tenant/cards.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tenant/dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tenant/panel.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tenant/inbox.css') }}">
+    
     <link rel="stylesheet" href="{{ url_for('static', filename='css/toast.css') }}">
-    <!---->
 </head>
 
 <body>
-
 <header class="dashboard-header">
     <h1>Welcome, {{ user_name }}</h1>
     <nav class="nav-links">
-        <!--button class="btn btn-submit" onclick="loadSection('houses')">View Houses</button-->
         <button id="open-inbox" class="btn btn-submit">📨 Inbox</button>
-        <a href="{{ url_for('logout') }}" class="nav-link logout">Logout 🚪 </a>
+        <a href="{{ url_for('logout') }}" class="nav-link logout">Logout 🚪</a>
     </nav>
 </header>
+
 <main class="dashboard-main">
-<aside class="filter-sidebar">
+    <aside class="filter-sidebar">
+        <form id="filterForm">
+            <h3>Filter Houses</h3>
 
-    <form id="filterForm">
-        <h3>Filter Houses</h3>
-        <label>House Type</label>
-        <select name="title">
-            <option value="">All Houses</option>
-            {% for title in titles %}
-            <option value="{{ title}}">{{ title }}</option>
-            {% endfor %}
-        </select>
+            <label>House Type</label>
+            <select name="title">
+                <option value="">All Houses</option>
+                {% for title in titles %}
+                    <option value="{{ title }}">{{ title }}</option>
+                {% endfor %}
+            </select>
 
-        <label>Area</label>
-        <select name="location">
-            <option value="">All Areas</option>
-            {% for loc in locations %}
-             <option value="{{ loc }}">{{ loc }}</option>
-             {% endfor %}
-        </select>
+            <label>Area</label>
+            <select name="location">
+                <option value="">All Areas</option>
+                {% for loc in locations %}
+                    <option value="{{ loc }}">{{ loc }}</option>
+                {% endfor %}
+            </select>
 
-        <div class="price-range-row">
-            <div class="price-group">
-                <label for="min_price">Min price</label>
-                <input type="number" name="min_price" placeholder="Min price">
+            <div class="price-range-row">
+                <div class="price-group">
+                    <label for="min_price">Min price</label>
+                    <input type="number" name="min_price" placeholder="Min price">
+                </div>
+                <div class="price-group">
+                    <label for="max_price">Max price</label>
+                    <input type="number" name="max_price" placeholder="Max price">
+                </div>
             </div>
-            <div class="price-group">
-                <label for="max_price">Max price</label>
-                <input type="number" name="max_price" placeholder="Max price">
-            </div>
+
+            <fieldset>
+                <legend>Amenities</legend>
+                <div id="amenity-options" class="amenity-options-list">
+                    {% for amenity in amenities %}
+                        <span class="amenity-option" data-value="{{ amenity['id'] | lower }}">{{ amenity['name'] }}</span>
+                    {% endfor %}
+                </div>
+                <input type="hidden" name="amenities" id="amenities-hidden">
+            </fieldset>
+
+            <button type="submit">Filter</button>
+        </form>
+    </aside>
+
+    <div class="main-content">
+        <div id="inboxPanel" class="inbox-panel">
+            <button id="closeInboxBtn" class="close-button" aria-label="Close inbox">×</button>
+            <h2 class="text-lg font-bold">Inbox</h2>
+            <div id="inboxContent">Loading messages...</div>
         </div>
-        <fieldset>
-            <legend><label>Amenities</label></legend>
-            
-            <div id="amenity-options" class="amenity-options-list">
-  {% for amenity in amenities %}
-    <span class="amenity-option" data-value="{{ amenity['id'] | lower }}">{{ amenity['name'] }}</span>
-  {% endfor %}
-</div>
 
-        
-        <input type="hidden" name="amenities" id="amenities-hidden">
-        </fieldset>
-        <button type="submit">Filter</button>
-    </form>
-</aside>
-<div class="main-content">
-    
-<div id="inboxPanel" class="inbox-panel">
-    <button id="closeInboxBtn" class="close-button" aria-label="Close inbox">×</button>
-    <h2 class="text-lg font-bold">Inbox</h2>
-    <div id="inboxContent">Loading messages...</div>
-</div>
+        <section id="content-area">
+            <!-- Sections like bookmarked houses or available houses will load here -->
+        </section>
 
-<section id="content-area">
-    <!-- Sections like bookmarked houses or available houses will load here -->
-</section>
-<div id="toast-container"></div>
-</div>
+        <div id="toast-container"></div>
+    </div>
 </main>
 </body>
 </html>

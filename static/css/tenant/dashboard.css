@@ -1,0 +1,13 @@
+/* dashboard.css — header bits, logout link, small dashboard UI */
+
+.dashboard-header .nav-links .btn-inbox{
+  background:transparent;border:1px solid #e6e9ef;padding:.45rem .7rem;border-radius:8px;
+}
+.nav-link.logout{color:#ef4444;text-decoration:none;font-weight:700}
+.nav-link.logout:hover{text-decoration:underline}
+
+/* small section title */
+.section-title{font-size:1.4rem;font-weight:700;margin-bottom:1rem;color:var(--text)}
+
+/* toast placement re-affirm */
+#toast-container{right:18px;bottom:22px}
